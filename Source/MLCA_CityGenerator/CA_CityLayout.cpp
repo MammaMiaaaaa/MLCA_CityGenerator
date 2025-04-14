@@ -9,7 +9,7 @@
 ACA_CityLayout::ACA_CityLayout()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
     // Create the instanced static mesh component and attach it
     InstancedGridMesh = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("InstancedGridMesh"));
@@ -34,12 +34,12 @@ void ACA_CityLayout::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Initialize(32);
+	/*Initialize();
 	Simulate();
-	VisualizeGrid();
+	VisualizeGrid();*/
 
 	// Print Start
-	UE_LOG(LogTemp, Warning, TEXT("City Layout Simulation Started"));
+	//UE_LOG(LogTemp, Warning, TEXT("City Layout Simulation Started"));
 
 }
 
@@ -64,7 +64,7 @@ int32 ACA_CityLayout::ManhattanDistance(FIntPoint A, FIntPoint B) const
     return FMath::Abs(A.X - B.X) + FMath::Abs(A.Y - B.Y);
 }
 
-void ACA_CityLayout::Initialize(int32 InSeed)
+void ACA_CityLayout::Initialize()
 {
     Grid.Init(EMPTY, GridSize * GridSize);
     RNG.Initialize(InSeed);
@@ -140,6 +140,7 @@ void ACA_CityLayout::GrowDistricts(TArray<int32>& OutGrid)
 
             TArray<FIntPoint> Neighbors = GetMooreNeighbors(x, y);
             TSet<int32> DistrictIDs;
+			int32 NeighborDistrictCount = 0;
 
             for (const auto& N : Neighbors)
             {
@@ -147,10 +148,11 @@ void ACA_CityLayout::GrowDistricts(TArray<int32>& OutGrid)
                 if (NeighborValue > 0)
                 {
                     DistrictIDs.Add(NeighborValue);
+					NeighborDistrictCount++;
                 }
             }
 
-            if (DistrictIDs.Num() == 1 && RNG.FRand() < GrowthProb)
+            if ((DistrictIDs.Num() == 1 && RNG.FRand() < GrowthProb))
             {
                 OutGrid[Index] = DistrictIDs.Array()[0];
             }
@@ -171,14 +173,14 @@ void ACA_CityLayout::AddRoads(TArray<int32>& GridRef)
         for (int32 x = 0; x < GridSize; ++x)
         {
             int32 Index = GetIndex(x, y);
-            if (GridRef[Index] <= 0) continue;
+            if (NewGrid[Index] <= 0) continue;
 
             TArray<FIntPoint> Neighbors = GetMooreNeighbors(x, y);
             TSet<int32> NeighborDistricts;
 
             for (const auto& N : Neighbors)
             {
-                int32 Val = GridRef[GetIndex(N.X, N.Y)];
+                int32 Val = NewGrid[GetIndex(N.X, N.Y)];
                 if (Val > 0)
                     NeighborDistricts.Add(Val);
             }
@@ -196,10 +198,13 @@ void ACA_CityLayout::AddRoads(TArray<int32>& GridRef)
 void ACA_CityLayout::Simulate()
 {
     TArray<int32> NewGrid;
+	int32 SameCount = 0;
     while (Grid.Contains(EMPTY))
     {
         GrowDistricts(NewGrid);
         if (NewGrid == Grid)
+			SameCount++;
+		if (SameCount > 3)
             break;
 
         Grid = NewGrid;

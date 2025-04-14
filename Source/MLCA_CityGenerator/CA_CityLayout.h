@@ -37,16 +37,19 @@ public:
     UPROPERTY(BlueprintReadOnly)
     TArray<int32> Grid;
 
-    UFUNCTION(BlueprintCallable)
-    void Initialize(int32 InSeed = 42);
-
-    UFUNCTION(BlueprintCallable)
-    void Simulate();
-
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
     UInstancedStaticMeshComponent* InstancedGridMesh;
 
-    UFUNCTION(BlueprintCallable)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 InSeed = 42;
+
+    UFUNCTION(BlueprintCallable, CallInEditor)
+    void Initialize();
+
+    UFUNCTION(BlueprintCallable, CallInEditor)
+    void Simulate();
+    
+    UFUNCTION(BlueprintCallable, CallInEditor)
     void VisualizeGrid();
 
 protected:
