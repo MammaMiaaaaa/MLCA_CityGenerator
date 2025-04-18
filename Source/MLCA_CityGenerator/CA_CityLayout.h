@@ -34,7 +34,7 @@ public:
     UPROPERTY(BlueprintReadOnly)
     int32 Iterations = 0;
 
-    UPROPERTY(BlueprintReadOnly)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
     TArray<int32> Grid;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
@@ -42,6 +42,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 InSeed = 42;
+
+	// Cell size for visualization
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float CellSize = 200.0f;
 
     UFUNCTION(BlueprintCallable, CallInEditor)
     void Initialize();

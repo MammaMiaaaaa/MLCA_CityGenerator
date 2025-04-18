@@ -242,7 +242,6 @@ void ACA_CityLayout::VisualizeGrid()
 
             // Build an instance transform based on x,y
             FTransform InstanceTransform;
-            const float CellSize = 100.0f;
             InstanceTransform.SetLocation(FVector(x * CellSize, y * CellSize, 0.0f));
 
             // Add instance
