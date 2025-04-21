@@ -202,6 +202,37 @@ void ACA_CityLayout::AddRoads(TArray<int32>& GridRef)
     GridRef = NewGrid;
 }
 
+void ACA_CityLayout::PatchEmptyCells()
+{
+    // Find Empty cell in grid
+	for (int32 y = 0; y < GridSize; ++y)
+	{
+		for (int32 x = 0; x < GridSize; ++x)
+		{
+			int32 Index = GetIndex(x, y);
+			if (Grid[Index] == EMPTY)
+			{
+				// Check neighbors
+				TArray<FIntPoint> Neighbors = GetMooreNeighbors(x, y);
+				TSet<int32> NeighborDistricts;
+				for (const auto& N : Neighbors)
+				{
+					int32 Val = Grid[GetIndex(N.X, N.Y)];
+					if (Val > 0)
+						NeighborDistricts.Add(Val);
+				}
+				// If there's only one district neighbor, fill it
+				if (NeighborDistricts.Num() == 1)
+				{
+					Grid[Index] = NeighborDistricts.Array()[0];
+				}
+			}
+		}
+	}
+
+    
+}
+
 void ACA_CityLayout::Simulate()
 {
     TArray<int32> NewGrid;
@@ -211,7 +242,7 @@ void ACA_CityLayout::Simulate()
         GrowDistricts(NewGrid);
         if (NewGrid == Grid)
 			SameCount++;
-        if (SameCount > 3) {
+        if (SameCount > 10) {
             // Print out the number of iterations
             UE_LOG(LogTemp, Warning, TEXT("City Layout Simulation Iterations: %d"), Iterations);
             break;
@@ -223,6 +254,7 @@ void ACA_CityLayout::Simulate()
     }
 
     AddRoads(Grid);
+	PatchEmptyCells();
 }
 
 void ACA_CityLayout::VisualizeGrid()
@@ -412,5 +444,51 @@ void ACA_CityLayout::RandomWalk(int32 X, int32 Y, TArray<bool>& Visited, int32 P
     {
         RandomWalk(N.X, N.Y, Visited, Index);
     }*/
+}
+
+void ACA_CityLayout::GetRoadJunctions()
+{
+	TArray<FIntPoint> Junctions;
+	for (int32 y = 0; y < GridSize; ++y)
+	{
+		for (int32 x = 0; x < GridSize; ++x)
+		{
+			int32 Index = GetIndex(x, y);
+			if (Grid[Index] == ROAD)
+			{
+				TArray<FIntPoint> Neighbors = GetMooreNeighbors(x, y);
+                TSet<int32> DistrictIDs;
+				for (const auto& N : Neighbors)
+				{
+					int32 NeighborIndex = GetIndex(N.X, N.Y);
+                    if (Grid[NeighborIndex] > 0)
+					{
+						DistrictIDs.Add(Grid[NeighborIndex]);
+					}
+				}
+				if (DistrictIDs.Num() > 2)
+				{
+					Junctions.Add(FIntPoint(x, y));
+				}
+			}
+		}
+	}
+	// Do something with Junctions
+
+    // For each Junction, add a visual representation, change the color to grey
+	for (const auto& Junction : Junctions)
+	{
+		int32 Index = GetIndex(Junction.X, Junction.Y);
+		FTransform InstanceTransform;
+		InstanceTransform.SetLocation(FVector(Junction.X * CellSize, Junction.Y * CellSize, 0.0f));
+		const int32 InstanceIndex = InstancedGridMesh->AddInstance(InstanceTransform);
+		// Set the color to grey
+		FLinearColor Color = FLinearColor::Gray;
+		InstancedGridMesh->SetCustomDataValue(InstanceIndex, 0, Color.R);
+		InstancedGridMesh->SetCustomDataValue(InstanceIndex, 1, Color.G);
+		InstancedGridMesh->SetCustomDataValue(InstanceIndex, 2, Color.B);
+	}
+	//print out the number of junctions
+	UE_LOG(LogTemp, Warning, TEXT("Number of Junctions: %d"), Junctions.Num());
 }
 

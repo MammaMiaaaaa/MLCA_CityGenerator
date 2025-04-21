@@ -62,7 +62,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void RandomWalk(int32 X, int32 Y, TArray<bool>& Visited, int32 PrevIndex);
 
-
+	UFUNCTION(BlueprintCallable)
+    void GetRoadJunctions();
 
 protected:
 	// Called when the game starts or when spawned
@@ -85,6 +86,10 @@ protected:
     void GrowDistricts(TArray<int32>& OutGrid);
 
     void AddRoads(TArray<int32>& GridRef);
+
+	void PatchEmptyCells();
+
+    
 
 public:	
 	// Called every frame
