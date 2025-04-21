@@ -56,6 +56,14 @@ public:
     UFUNCTION(BlueprintCallable, CallInEditor)
     void VisualizeGrid();
 
+    UFUNCTION(BlueprintCallable)
+    void TrimRoads();
+
+	UFUNCTION(BlueprintCallable)
+	void RandomWalk(int32 X, int32 Y, TArray<bool>& Visited, int32 PrevIndex);
+
+
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -71,6 +79,8 @@ protected:
     void PlaceSeeds();
 
     TArray<FIntPoint> GetMooreNeighbors(int32 X, int32 Y) const;
+
+    TArray<FIntPoint> GetVonNeumannNeighbors(int32 X, int32 Y) const;
 
     void GrowDistricts(TArray<int32>& OutGrid);
 

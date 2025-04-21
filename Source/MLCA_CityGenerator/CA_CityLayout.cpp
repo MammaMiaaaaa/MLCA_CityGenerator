@@ -18,15 +18,7 @@ ACA_CityLayout::ACA_CityLayout()
     // We want 3 floats per instance (R, G, B).
     InstancedGridMesh->NumCustomDataFloats = 3;
 
-    TMap<int32, FLinearColor> DistrictColors;
-    DistrictColors.Add(ACA_CityLayout::ROAD, FLinearColor::Black);
 
-    for (int32 DistrictID = 1; DistrictID <= NumDistricts; ++DistrictID)
-    {
-        // Pick random color. Or generate systematically.
-        FLinearColor RandomColor = FLinearColor::MakeRandomColor();
-        DistrictColors.Add(DistrictID, RandomColor);
-    }
 }
 
 // Called when the game starts or when spawned
@@ -34,13 +26,7 @@ void ACA_CityLayout::BeginPlay()
 {
 	Super::BeginPlay();
 
-	/*Initialize();
-	Simulate();
-	VisualizeGrid();*/
-
-	// Print Start
-	//UE_LOG(LogTemp, Warning, TEXT("City Layout Simulation Started"));
-
+	
 }
 
 // Called every frame
@@ -127,6 +113,27 @@ TArray<FIntPoint> ACA_CityLayout::GetMooreNeighbors(int32 X, int32 Y) const
     return Neighbors;
 }
 
+TArray<FIntPoint> ACA_CityLayout::GetVonNeumannNeighbors(int32 X, int32 Y) const
+{
+	TArray<FIntPoint> Neighbors;
+	// Von Neumann neighbors are the four orthogonal directions
+	const int32 dx[4] = { -1, 0, 1, 0 };
+	const int32 dy[4] = { 0, -1, 0, 1 };
+	for (int32 i = 0; i < 4; ++i)
+	{
+		int32 nx = X + dx[i];
+		int32 ny = Y + dy[i];
+		if (IsInBounds(nx, ny))
+		{
+			Neighbors.Add(FIntPoint(nx, ny));
+		}
+	}
+
+
+
+    return Neighbors;
+}
+
 void ACA_CityLayout::GrowDistricts(TArray<int32>& OutGrid)
 {
     OutGrid = Grid;
@@ -175,7 +182,7 @@ void ACA_CityLayout::AddRoads(TArray<int32>& GridRef)
             int32 Index = GetIndex(x, y);
             if (NewGrid[Index] <= 0) continue;
 
-            TArray<FIntPoint> Neighbors = GetMooreNeighbors(x, y);
+            TArray<FIntPoint> Neighbors = GetVonNeumannNeighbors(x, y);
             TSet<int32> NeighborDistricts;
 
             for (const auto& N : Neighbors)
@@ -204,8 +211,12 @@ void ACA_CityLayout::Simulate()
         GrowDistricts(NewGrid);
         if (NewGrid == Grid)
 			SameCount++;
-		if (SameCount > 3)
+        if (SameCount > 3) {
+            // Print out the number of iterations
+            UE_LOG(LogTemp, Warning, TEXT("City Layout Simulation Iterations: %d"), Iterations);
             break;
+        }
+			
 
         Grid = NewGrid;
         Iterations++;
@@ -258,5 +269,148 @@ void ACA_CityLayout::VisualizeGrid()
             }
         }
     }
+}
+
+void ACA_CityLayout::TrimRoads()
+{
+    // Create a visited array to track which cells have been walked on
+    TArray<bool> Visited;
+    Visited.Init(false, GridSize * GridSize);
+    bool Done = false;
+
+    // Start the random walk from any road cell
+    for (int32 y = 0; y < GridSize; ++y)
+    {
+        for (int32 x = 0; x < GridSize; ++x)
+        {
+            int32 Index = GetIndex(x, y);
+            if (Grid[Index] == ROAD && !Visited[Index])
+            {
+                // Perform a random walk starting from this road cell
+                RandomWalk(x, y, Visited,-1);
+                /*Done = true;
+                break;*/
+            }
+        }
+		//if (Done) break;
+    }
+    /*for (int32 x = 0; x < GridSize; ++x)
+    {
+		RandomWalk(x, 0, Visited, -1);
+    }
+	for (int32 y = 0; y < GridSize; ++y)
+	{
+		RandomWalk(0, y, Visited, -1);
+	}
+    for (int32 x = 0; x < GridSize; ++x)
+    {
+        RandomWalk(x, GridSize-1, Visited, -1);
+    }
+	for (int32 y = 0; y < GridSize; ++y)
+	{
+		RandomWalk(GridSize - 1, y, Visited, -1);
+	}*/
+
+    // Convert unvisited road cells into district cells
+    for (int32 y = 0; y < GridSize; ++y)
+    {
+        for (int32 x = 0; x < GridSize; ++x)
+        {
+            int32 Index = GetIndex(x, y);
+            if (Grid[Index] == ROAD && !Visited[Index])
+            {
+                // Find a neighboring district and assign its value
+                TArray<FIntPoint> Neighbors = GetVonNeumannNeighbors(x, y);
+                for (const auto& N : Neighbors)
+                {
+                    int32 NeighborIndex = GetIndex(N.X, N.Y);
+                    if (Grid[NeighborIndex] > 0) // District cell
+                    {
+                        Grid[Index] = Grid[NeighborIndex];
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void ACA_CityLayout::RandomWalk(int32 X, int32 Y, TArray<bool>& Visited, int32 PrevIndex)
+{
+    int32 Index = GetIndex(X, Y);
+	//bool hasNeighbor = false;
+	//int32 neighborCount = 0;
+
+    // Get all neighboring road cells
+    TArray<FIntPoint> Neighbors;
+
+    Visited[Index] = true;
+    TSet<int32> DistrictIDs;
+    for (const auto& N : GetMooreNeighbors(X, Y))
+    {
+        int32 NeighborIndex = GetIndex(N.X, N.Y);
+        if (Grid[NeighborIndex] > 0)
+        {
+			DistrictIDs.Add(Grid[NeighborIndex]);
+        }
+    }
+    // If the cell only has one District neighbor, mark it as not visited
+	if (DistrictIDs.Num() == 1)
+	{
+		Visited[Index] = false;
+	}
+
+
+
+ //   for (const auto& N : GetVonNeumannNeighbors(X, Y))
+ //   {
+ //       int32 NeighborIndex = GetIndex(N.X, N.Y);
+ //       if (Grid[NeighborIndex] == ROAD && NeighborIndex != PrevIndex)
+ //       {
+ //           hasNeighbor = true;
+ //       }
+	//	// Check if the neighbor is not visited and is a road
+ //       if (Grid[NeighborIndex] == ROAD && !Visited[NeighborIndex])
+ //       {
+ //           Neighbors.Add(N);
+ //       }
+	//	if (Grid[NeighborIndex] == ROAD)
+	//	{
+	//		neighborCount++;
+	//	}
+
+ //   }
+ //   //Visited[Index] = hasNeighbor;
+
+ //   // If the cell is in the edges of the grid
+ //   if (X == 0 || Y == 0 || X == GridSize - 1 || Y == GridSize - 1)
+ //   {
+ //       // Mark the cell as visited
+ //       Visited[Index] = true;
+ //       
+ //   }
+
+	//if (Neighbors.Num() == 0)
+	//{
+	//	return; // No neighbors to walk to
+	//}
+ //   else {
+	//	// Mark the current cell as visited
+	//	Visited[Index] = true;
+ //   }
+
+ //   /*if (neighborCount > 1)
+	//{
+	//	Visited[Index] = true;
+	//}*/
+	
+    
+    
+
+    // Recursively walk to each neighbor
+    /*for (const auto& N : Neighbors)
+    {
+        RandomWalk(N.X, N.Y, Visited, Index);
+    }*/
 }
 
