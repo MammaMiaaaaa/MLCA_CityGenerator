@@ -134,6 +134,92 @@ TArray<FIntPoint> ACA_CityLayout::GetVonNeumannNeighbors(int32 X, int32 Y) const
     return Neighbors;
 }
 
+void ACA_CityLayout::GetAllRoads(TArray<FRoadStruct> InRoadArray)
+{
+	TArray<int32> TempGrid = Grid;
+	TArray<int32> RoadIndexArray;
+	// For each cell in the grid, check if it's a road
+	for (int32 y = 0; y < GridSize; ++y)
+	{
+		for (int32 x = 0; x < GridSize; ++x)
+		{
+			int32 Index = GetIndex(x, y);
+			if (TempGrid[Index] == ROAD)
+			{
+				RecursiveWalkToRoads(TempGrid, Index, RoadIndexArray);
+			}
+		}
+	}
+}
+
+void ACA_CityLayout::RecursiveWalkToRoads(TArray<int32>& GridArray, int32 Index, TArray<int32>& RoadIndexArray)
+{
+	// Set the current cell as visited
+	GridArray[Index] = -3; // Mark as visited
+	RoadIndexArray.Add(Index);
+
+	// For each neighbor, check if it's a road
+	TArray<FIntPoint> Neighbors = GetMooreNeighbors(Index % GridSize, Index / GridSize);
+	for (const auto& N : Neighbors)
+	{
+		int32 NeighborIndex = GetIndex(N.X, N.Y);
+		if (GridArray[NeighborIndex] == ROAD)
+		{
+            if (N.X == 0 || N.Y == 0 || N.X == GridSize - 1 || N.Y == GridSize - 1) {
+				AddRoadsToArray(RoadIndexArray);
+            }
+            else {
+				RecursiveWalkToRoads(GridArray, NeighborIndex, RoadIndexArray);
+            }
+		}
+		else if (GridArray[NeighborIndex] == JUNCTION)
+		{
+			// If it's a junction, add it to the array
+			RoadIndexArray.Add(NeighborIndex);
+			AddRoadsToArray(RoadIndexArray);
+		}
+		
+	}
+
+}
+
+void ACA_CityLayout::AddRoadsToArray(TArray<int32>& RoadIndexArray)
+{
+    if (!InstancedGridMesh)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("InstancedGridMesh is null in AddRoadsToArray."));
+        return;
+    }
+
+    // Create a new vector array to store the road indices
+    TArray<FVector> RoadPointsLocation;
+    RoadPointsLocation.Reserve(RoadIndexArray.Num());
+
+    // Get InstancedGridMesh location and store to RoadPointsLocation
+    for (int32 Index : RoadIndexArray)
+    {
+        if (InstancedGridMesh->GetInstanceCount() > Index)
+        {
+            FTransform InstanceTransform;
+            InstancedGridMesh->GetInstanceTransform(Index, InstanceTransform, true);
+            RoadPointsLocation.Add(InstanceTransform.GetLocation());
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Invalid index %d in RoadIndexArray"), Index);
+        }
+    }
+	// Add the road points to the RoadArray
+	FRoadStruct RoadStruct;
+	RoadStruct.RoadPointsLocation = RoadPointsLocation;
+	RoadStruct.RoadPointsIndex = RoadIndexArray;
+	RoadArray.Add(RoadStruct);
+	// Clear the RoadIndexArray for the next road
+	RoadIndexArray.Empty();
+
+
+}
+
 void ACA_CityLayout::GrowDistricts(TArray<int32>& OutGrid)
 {
     OutGrid = Grid;
@@ -326,23 +412,7 @@ void ACA_CityLayout::TrimRoads()
         }
 		//if (Done) break;
     }
-    /*for (int32 x = 0; x < GridSize; ++x)
-    {
-		RandomWalk(x, 0, Visited, -1);
-    }
-	for (int32 y = 0; y < GridSize; ++y)
-	{
-		RandomWalk(0, y, Visited, -1);
-	}
-    for (int32 x = 0; x < GridSize; ++x)
-    {
-        RandomWalk(x, GridSize-1, Visited, -1);
-    }
-	for (int32 y = 0; y < GridSize; ++y)
-	{
-		RandomWalk(GridSize - 1, y, Visited, -1);
-	}*/
-
+    
     // Convert unvisited road cells into district cells
     for (int32 y = 0; y < GridSize; ++y)
     {
@@ -469,6 +539,7 @@ void ACA_CityLayout::GetRoadJunctions()
 				if (DistrictIDs.Num() > 2)
 				{
 					Junctions.Add(FIntPoint(x, y));
+					Grid[Index] = JUNCTION; // Mark as junction
 				}
 			}
 		}
@@ -479,14 +550,12 @@ void ACA_CityLayout::GetRoadJunctions()
 	for (const auto& Junction : Junctions)
 	{
 		int32 Index = GetIndex(Junction.X, Junction.Y);
-		FTransform InstanceTransform;
-		InstanceTransform.SetLocation(FVector(Junction.X * CellSize, Junction.Y * CellSize, 0.0f));
-		const int32 InstanceIndex = InstancedGridMesh->AddInstance(InstanceTransform);
+		
 		// Set the color to grey
 		FLinearColor Color = FLinearColor::Gray;
-		InstancedGridMesh->SetCustomDataValue(InstanceIndex, 0, Color.R);
-		InstancedGridMesh->SetCustomDataValue(InstanceIndex, 1, Color.G);
-		InstancedGridMesh->SetCustomDataValue(InstanceIndex, 2, Color.B);
+		InstancedGridMesh->SetCustomDataValue(Index, 0, Color.R);
+		InstancedGridMesh->SetCustomDataValue(Index, 1, Color.G);
+		InstancedGridMesh->SetCustomDataValue(Index, 2, Color.B);
 	}
 	//print out the number of junctions
 	UE_LOG(LogTemp, Warning, TEXT("Number of Junctions: %d"), Junctions.Num());

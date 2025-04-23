@@ -5,7 +5,9 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/InstancedStaticMeshComponent.h"
+#include "RoadStruct.h"
 #include "CA_CityLayout.generated.h"
+
 
 UCLASS()
 class MLCA_CITYGENERATOR_API ACA_CityLayout : public AActor
@@ -18,6 +20,7 @@ public:
 
     static const int32 EMPTY = -1;
     static const int32 ROAD = 0;
+    static const int32 JUNCTION = -2;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     int32 GridSize = 100;
@@ -47,6 +50,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float CellSize = 200.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<FRoadStruct> RoadArray;
+
     UFUNCTION(BlueprintCallable, CallInEditor)
     void Initialize();
 
@@ -65,6 +71,24 @@ public:
 	UFUNCTION(BlueprintCallable)
     void GetRoadJunctions();
 
+	UFUNCTION(BlueprintCallable)
+    TArray<FIntPoint> GetMooreNeighbors(int32 X, int32 Y) const;
+
+    UFUNCTION(BlueprintCallable)
+    TArray<FIntPoint> GetVonNeumannNeighbors(int32 X, int32 Y) const;
+
+	UFUNCTION(BlueprintCallable)
+    void GetAllRoads(TArray<FRoadStruct> InRoadArray);
+
+	UFUNCTION(BlueprintCallable)
+    void RecursiveWalkToRoads(TArray<int32>& GridArray, int32 Index, TArray<int32>& RoadIndexArray);
+
+	UFUNCTION(BlueprintCallable)
+	void AddRoadsToArray(TArray<int32>& RoadIndexArray);
+
+
+
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -78,10 +102,6 @@ protected:
     int32 ManhattanDistance(FIntPoint A, FIntPoint B) const;
 
     void PlaceSeeds();
-
-    TArray<FIntPoint> GetMooreNeighbors(int32 X, int32 Y) const;
-
-    TArray<FIntPoint> GetVonNeumannNeighbors(int32 X, int32 Y) const;
 
     void GrowDistricts(TArray<int32>& OutGrid);
 
