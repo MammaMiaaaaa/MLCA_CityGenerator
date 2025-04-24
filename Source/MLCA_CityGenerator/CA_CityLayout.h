@@ -53,6 +53,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FRoadStruct> RoadArray;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool IsMeetAJunction = false;
+
     UFUNCTION(BlueprintCallable, CallInEditor)
     void Initialize();
 
@@ -78,14 +81,13 @@ public:
     TArray<FIntPoint> GetVonNeumannNeighbors(int32 X, int32 Y) const;
 
 	UFUNCTION(BlueprintCallable)
-    void GetAllRoads(TArray<FRoadStruct> InRoadArray);
+    void GetAllRoads();
 
 	UFUNCTION(BlueprintCallable)
-    void RecursiveWalkToRoads(TArray<int32>& GridArray, int32 Index, TArray<int32>& RoadIndexArray);
+    int32 RecursiveWalkToRoads(TArray<int32>& GridArray, int32 Index, TArray<int32>& RoadIndexArray, TArray<int32>& NeighborIndex);
 
 	UFUNCTION(BlueprintCallable)
 	void AddRoadsToArray(TArray<int32>& RoadIndexArray);
-
 
 
 
@@ -109,7 +111,7 @@ protected:
 
 	void PatchEmptyCells();
 
-    
+	void LoopThroughNeighborIndex(TArray<int32>& GridRef, TArray<int32>& RoadIndexArray, TArray<int32>& NeighborIndex );
 
 public:	
 	// Called every frame
