@@ -139,6 +139,7 @@ void ACA_CityLayout::GetAllRoads()
 	TArray<int32> TempGrid = Grid;
 	TArray<int32> RoadIndexArray;
     TArray<int32> NeighborIndex;
+	TArray<int32> JunctionIndex;
 	// For each cell in the grid, check if it's a road
 	for (int32 y = 0; y < GridSize; ++y)
 	{
@@ -158,7 +159,7 @@ void ACA_CityLayout::GetAllRoads()
 						NeighborIndex.Remove(CurrentIndex);
                     }
                     else {
-						NeighborCount=RecursiveWalkToRoads(TempGrid, CurrentIndex, RoadIndexArray, NeighborIndex);
+						NeighborCount=RecursiveWalkToRoads(TempGrid, CurrentIndex, RoadIndexArray, NeighborIndex,JunctionIndex);
                     }
 					Counter++;
 					
@@ -170,25 +171,13 @@ void ACA_CityLayout::GetAllRoads()
 						Counter = 0;
 					}
 				}
-				AddRoadsToArray(RoadIndexArray);
-				
-
-
-
-				//LoopThroughNeighborIndex(TempGrid, RoadIndexArray, NeighborIndex);
-    //            if (NeighborIndex.Num() == 0) {
-    //                // Add the road to the array
-    //                AddRoadsToArray(RoadIndexArray);
-    //            }
-    //            else {
-    //                LoopThroughNeighborIndex(TempGrid, RoadIndexArray, NeighborIndex);
-    //            }
+				AddRoadsToArray(RoadIndexArray, JunctionIndex);
 			}
 		}
 	}
 }
 
-int32 ACA_CityLayout::RecursiveWalkToRoads(TArray<int32>& GridArray, int32 Index, TArray<int32>& RoadIndexArray, TArray<int32>& NeighborIndexArray)
+int32 ACA_CityLayout::RecursiveWalkToRoads(TArray<int32>& GridArray, int32 Index, TArray<int32>& RoadIndexArray, TArray<int32>& NeighborIndexArray, TArray<int32>& JunctionIndex)
 {
     TArray<int32> TempNeighbor;
     IsMeetAJunction = false;
@@ -213,6 +202,7 @@ int32 ACA_CityLayout::RecursiveWalkToRoads(TArray<int32>& GridArray, int32 Index
 			IsMeetAJunction = true;
 			NeighborIndexArray.Add(NeighborIndex);
 			RoadIndexArray.AddUnique(NeighborIndex);
+			JunctionIndex.AddUnique(NeighborIndex);
 		}
 	}
     // If meet a junction, remove the diagonal neighbors road cell
@@ -236,7 +226,7 @@ int32 ACA_CityLayout::RecursiveWalkToRoads(TArray<int32>& GridArray, int32 Index
 	return NeighborIndexArray.Num();
 }
 
-void ACA_CityLayout::AddRoadsToArray(TArray<int32>& RoadIndexArray)
+void ACA_CityLayout::AddRoadsToArray(TArray<int32>& RoadIndexArray, TArray<int32>& JunctionIndex)
 {
     if (!InstancedGridMesh)
     {
@@ -266,43 +256,68 @@ void ACA_CityLayout::AddRoadsToArray(TArray<int32>& RoadIndexArray)
 	FRoadStruct RoadStruct;
 	RoadStruct.RoadPointsLocation = RoadPointsLocation;
 	RoadStruct.RoadPointsIndex = RoadIndexArray;
+	RoadStruct.JunctionIndex = JunctionIndex;
 	RoadArray.Add(RoadStruct);
 	// Clear the RoadIndexArray for the next road
 	RoadIndexArray.Empty();
+	// Clear the JunctionIndex for the next road
+	JunctionIndex.Empty();
 
 
 }
-void ACA_CityLayout::LoopThroughNeighborIndex(TArray<int32>& GridRef, TArray<int32>& RoadIndexArray, TArray<int32>& NeighborIndex)
+
+void ACA_CityLayout::SelectionSortTheRoad()
 {
-    // Use a copy to safely iterate
-    TArray<int32> NeighborCopy = NeighborIndex;
-
-    for (const int32 N : NeighborCopy)
+    for (FRoadStruct& Road : RoadArray)
     {
-        if (N < 0 || N >= GridRef.Num())
+		TArray<FVector>& Points = Road.RoadPointsLocation;
+		TArray<int32>& Indices = Road.RoadPointsIndex;
+        int32 Num = Points.Num();
+        
+		// Check if the road has junctions
+		if (Road.JunctionIndex.Num() > 0)
+		{
+            int32 Index = Road.JunctionIndex[0];
+			// Find the first index of the road points that is equal to the junction index
+			int32 FirstIndex = 0;
+			for (int32 i = 0; i < Num; ++i)
+			{
+				if (Indices[i] == Index)
+				{
+					FirstIndex = i;
+					break;
+				}
+			}
+			Points.Swap(0, FirstIndex);
+			Indices.Swap(0, FirstIndex);
+		}
+		
+        for (int32 i = 1; i < Num - 1; ++i)
         {
-            UE_LOG(LogTemp, Error, TEXT("Invalid NeighborIndex %d out of GridRef bounds (size %d)"), N, GridRef.Num());
-            continue;
+			float Distance = FVector::Dist(Points[i-1], Points[i]);
+            int32 MinIndex = i;
+			
+            for (int32 j = i + 1; j < Num; ++j)
+            {
+				float Dist = FVector::Dist(Points[i-1], Points[j]);
+				if (Dist < Distance)
+				{
+					Distance = Dist;
+					MinIndex = j;
+				}
+                
+            }
+            if (MinIndex != i)
+            {
+                Points.Swap(i, MinIndex);
+				Indices.Swap(i, MinIndex);
+            }
         }
-
-		// Check if the neighbor is a road or junction
-        if (GridRef[N] == JUNCTION)
-        {
-			// If it's a junction don't do the recursion and remove it from the NeighborIndex
-            NeighborIndex.Remove(N); // Safe because we're not modifying the array we're iterating
-        }
-        else
-        {
-            RecursiveWalkToRoads(GridRef, N, RoadIndexArray, NeighborIndex);
-        }
-        if (NeighborIndex.Num() == 0) {
-            // Add the road to the array
-            AddRoadsToArray(RoadIndexArray);
-        }
-        else {
-            LoopThroughNeighborIndex(GridRef, RoadIndexArray, NeighborIndex);
-        }
+		Road.RoadPointsLocation = Points;
+		Road.RoadPointsIndex = Indices;
     }
+
+
     
 }
 

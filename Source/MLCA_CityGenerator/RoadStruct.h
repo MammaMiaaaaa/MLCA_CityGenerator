@@ -16,4 +16,7 @@ TArray<FVector> RoadPointsLocation;
 
 UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Road")
 TArray<int32> RoadPointsIndex;
+
+UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Road")
+TArray<int32> JunctionIndex;
 };

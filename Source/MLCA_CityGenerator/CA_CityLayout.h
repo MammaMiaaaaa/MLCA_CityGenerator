@@ -84,10 +84,13 @@ public:
     void GetAllRoads();
 
 	UFUNCTION(BlueprintCallable)
-    int32 RecursiveWalkToRoads(TArray<int32>& GridArray, int32 Index, TArray<int32>& RoadIndexArray, TArray<int32>& NeighborIndex);
+    int32 RecursiveWalkToRoads(TArray<int32>& GridArray, int32 Index, TArray<int32>& RoadIndexArray, TArray<int32>& NeighborIndex, TArray<int32>& JunctionIndex);
 
 	UFUNCTION(BlueprintCallable)
-	void AddRoadsToArray(TArray<int32>& RoadIndexArray);
+	void AddRoadsToArray(TArray<int32>& RoadIndexArray, TArray<int32>& JunctionIndex);
+
+	UFUNCTION(BlueprintCallable)
+	void SelectionSortTheRoad();
 
 
 
@@ -110,8 +113,6 @@ protected:
     void AddRoads(TArray<int32>& GridRef);
 
 	void PatchEmptyCells();
-
-	void LoopThroughNeighborIndex(TArray<int32>& GridRef, TArray<int32>& RoadIndexArray, TArray<int32>& NeighborIndex );
 
 public:	
 	// Called every frame
