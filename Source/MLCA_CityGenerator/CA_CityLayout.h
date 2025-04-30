@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "Components/InstancedStaticMeshComponent.h"
 #include "RoadStruct.h"
+#include "LayerEnum.h"
 #include "CA_CityLayout.generated.h"
 
 
@@ -18,43 +19,85 @@ public:
 	// Sets default values for this actor's properties
 	ACA_CityLayout();
 
-    static const int32 EMPTY = -1;
-    static const int32 ROAD = 0;
+    static const int32 EMPTY = 0;
+    static const int32 ROAD = -1;
     static const int32 JUNCTION = -2;
+	static const int32 RESIDENTIAL = 1;
+	static const int32 COMMERCIAL = 2;
+	static const int32 INDUSTRIAL = 3;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
     int32 GridSize = 100;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
     int32 NumDistricts = 20;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
     float GrowthProb = 0.5f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
     int32 MinSeedDistance = 3;
 
-    UPROPERTY(BlueprintReadOnly)
-    int32 Iterations = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	int32 InSeed = 42;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    TArray<int32> Grid;
+	// Cell size for visualization
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	float CellSize = 200.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
     UInstancedStaticMeshComponent* InstancedGridMesh;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 InSeed = 42;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Water")
+	int32 WaterSeedAmount = 10;
 
-	// Cell size for visualization
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Water")
+	int32 WaterMinSeedDistance = 5;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Water")
+	int32 WaterSpreadDistance = 10;
+
+	UPROPERTY(BlueprintReadOnly)
+	int32 Iterations = 0;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float CellSize = 200.0f;
+	TArray<int32> Grid;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FRoadStruct> RoadArray;
 
+	UPROPERTY(EditAnywhere)
+	TMap<int32, FLinearColor> DistrictColors;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool IsMeetAJunction = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    TArray<int32> RoadLayerGrid;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<int32> DistrictLayerGrid;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    TArray<int32> WaterLayerGrid;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<int32> ElectricityLayerGrid;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<int32> PopulationSatisfactionLayerGrid;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<int32> PolutionLayerGrid;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<int32> PopulationDensityLayerGrid;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<int32> RoadAccessibilityLayerGrid;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<int32> SecurityLayerGrid;
 
     UFUNCTION(BlueprintCallable, CallInEditor)
     void Initialize();
@@ -92,6 +135,15 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SelectionSortTheRoad();
 
+	UFUNCTION(BlueprintCallable)
+	void InitializeLayerValues();
+
+	UFUNCTION(BlueprintCallable)
+	void UpdateLayerValues(ELayerEnum LayerEnum );
+
+	UFUNCTION(BlueprintCallable)
+	void UpdateISMToSpecificLayer(ELayerEnum LayerEnum);
+
 
 
 protected:
@@ -113,6 +165,26 @@ protected:
     void AddRoads(TArray<int32>& GridRef);
 
 	void PatchEmptyCells();
+
+	TArray<FIntPoint> GetMooreNeighborsWithinRadius(int32 StartX, int32 StartY, int32 Radius) const;
+
+	void InitializeRoadLayerGridValues();
+
+	void InitializeDistrictLayerGridValues();
+
+	void InitializeWaterLayerGridValues();
+
+	void InitializeElectricityLayerGridValues();
+
+	void InitializePopulationSatisfactionLayerGridValues();
+
+	void InitializePolutionLayerGridValues();
+
+	void InitializePopulationDensityLayerGridValues();
+
+	void InitializeRoadAccessibilityLayerGridValues();
+
+	void InitializeSecurityLayerGridValues();
 
 public:	
 	// Called every frame

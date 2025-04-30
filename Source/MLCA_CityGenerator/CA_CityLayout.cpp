@@ -15,9 +15,8 @@ ACA_CityLayout::ACA_CityLayout()
     InstancedGridMesh = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("InstancedGridMesh"));
     RootComponent = InstancedGridMesh;
 
-    // We want 3 floats per instance (R, G, B).
-    InstancedGridMesh->NumCustomDataFloats = 3;
-
+    // We want 3 floats per instance (R, G, B, A).
+    InstancedGridMesh->NumCustomDataFloats = 4;
 
 }
 
@@ -61,7 +60,7 @@ void ACA_CityLayout::PlaceSeeds()
 {
     SeedPositions.Empty();
     int32 Attempts = 0;
-    const int32 MaxAttempts = GridSize * GridSize * 10;
+    const int32 MaxAttempts = GridSize * GridSize;
 
     while (SeedPositions.Num() < NumDistricts && Attempts < MaxAttempts)
     {
@@ -321,6 +320,266 @@ void ACA_CityLayout::SelectionSortTheRoad()
     
 }
 
+void ACA_CityLayout::InitializeLayerValues()
+{
+    InitializeRoadLayerGridValues();
+    InitializeDistrictLayerGridValues();
+    InitializeWaterLayerGridValues();
+    InitializeElectricityLayerGridValues();
+    InitializePopulationSatisfactionLayerGridValues();
+    InitializePolutionLayerGridValues();
+    InitializePopulationDensityLayerGridValues();
+    InitializeRoadAccessibilityLayerGridValues();
+    InitializeSecurityLayerGridValues();
+}
+
+void ACA_CityLayout::UpdateLayerValues(ELayerEnum LayerEnum)
+{
+    switch (LayerEnum)
+    {
+    case ELayerEnum::Road:
+
+        break;
+    case ELayerEnum::District:
+        break;
+    case ELayerEnum::Water:
+        break;
+    case ELayerEnum::Electricity:
+        break;
+    case ELayerEnum::Satisfaction:
+        break;
+    case ELayerEnum::Polution:
+        break;
+    case ELayerEnum::Density:
+        break;
+    case ELayerEnum::Accessibility:
+
+        break;
+    case ELayerEnum::Security:
+
+        break;
+    default:
+        UE_LOG(LogTemp, Warning, TEXT("UpdateLayerValues: Unknown LayerEnum value!"));
+        break;
+    }
+}
+
+void ACA_CityLayout::UpdateISMToSpecificLayer(ELayerEnum LayerEnum)
+{
+    FLinearColor GrayColor = FLinearColor::Gray;
+    FLinearColor BlackColor = FLinearColor::Black;
+    FLinearColor GreenColor = FLinearColor::Green;
+    FLinearColor BlueColor = FLinearColor::Blue;
+    FLinearColor YellowColor = FLinearColor::Yellow;
+    switch (LayerEnum)
+    {
+    case ELayerEnum::Road:
+		// for loop through the RoadLayerGrid and set the material color according to the value
+        
+		for (int32 y = 0; y < GridSize; ++y)
+		{
+			for (int32 x = 0; x < GridSize; ++x)
+			{
+				int32 Index = GetIndex(x, y);
+				if (RoadLayerGrid[Index] == ROAD)
+				{
+                    InstancedGridMesh->SetCustomDataValue(Index, 0, BlackColor.R);
+                    InstancedGridMesh->SetCustomDataValue(Index, 1, BlackColor.G);
+                    InstancedGridMesh->SetCustomDataValue(Index, 2, BlackColor.B);
+                    InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+				}
+                else {
+					InstancedGridMesh->SetCustomDataValue(Index, 0, GrayColor.R);
+					InstancedGridMesh->SetCustomDataValue(Index, 1, GrayColor.G);
+					InstancedGridMesh->SetCustomDataValue(Index, 2, GrayColor.B);
+                    InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                }
+			}
+		}
+        break;
+    case ELayerEnum::District:
+        // for loop through the DistrictLayerGrid and set the material color according to the value
+        for (int32 y = 0; y < GridSize; ++y)
+        {
+            for (int32 x = 0; x < GridSize; ++x)
+            {
+                int32 Index = GetIndex(x, y);
+                if (DistrictLayerGrid[Index] == RESIDENTIAL)
+                {
+                    InstancedGridMesh->SetCustomDataValue(Index, 0, GreenColor.R);
+                    InstancedGridMesh->SetCustomDataValue(Index, 1, GreenColor.G);
+                    InstancedGridMesh->SetCustomDataValue(Index, 2, GreenColor.B);
+                    InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                }
+                else if(DistrictLayerGrid[Index] == COMMERCIAL) {
+                    InstancedGridMesh->SetCustomDataValue(Index, 0, BlueColor.R);
+                    InstancedGridMesh->SetCustomDataValue(Index, 1, BlueColor.G);
+                    InstancedGridMesh->SetCustomDataValue(Index, 2, BlueColor.B);
+                    InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                }
+				else if (DistrictLayerGrid[Index] == INDUSTRIAL) {
+					InstancedGridMesh->SetCustomDataValue(Index, 0, YellowColor.R);
+					InstancedGridMesh->SetCustomDataValue(Index, 1, YellowColor.G);
+					InstancedGridMesh->SetCustomDataValue(Index, 2, YellowColor.B);
+                    InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+				}
+				else if (DistrictLayerGrid[Index] == ROAD) {
+					InstancedGridMesh->SetCustomDataValue(Index, 0, BlackColor.R);
+					InstancedGridMesh->SetCustomDataValue(Index, 1, BlackColor.G);
+					InstancedGridMesh->SetCustomDataValue(Index, 2, BlackColor.B);
+                    InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+				}
+				else if (DistrictLayerGrid[Index] == EMPTY) {
+					InstancedGridMesh->SetCustomDataValue(Index, 0, GrayColor.R);
+					InstancedGridMesh->SetCustomDataValue(Index, 1, GrayColor.G);
+					InstancedGridMesh->SetCustomDataValue(Index, 2, GrayColor.B);
+                    InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+				}
+				else {
+					InstancedGridMesh->SetCustomDataValue(Index, 0, GrayColor.R);
+					InstancedGridMesh->SetCustomDataValue(Index, 1, GrayColor.G);
+					InstancedGridMesh->SetCustomDataValue(Index, 2, GrayColor.B);
+                    InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+				}
+            }
+        }
+        break;
+    case ELayerEnum::Water:
+        // for loop through the WaterLayerGrid and set the material color according to the value
+        for (int32 y = 0; y < GridSize; ++y)
+        {
+            for (int32 x = 0; x < GridSize; ++x)
+            {
+                int32 Index = GetIndex(x, y);
+                if (WaterLayerGrid[Index] > 0)
+                {
+                    InstancedGridMesh->SetCustomDataValue(Index, 0, BlueColor.R);
+                    InstancedGridMesh->SetCustomDataValue(Index, 1, BlueColor.G);
+                    InstancedGridMesh->SetCustomDataValue(Index, 2, BlueColor.B);
+                    // Set Custom Data Value 3 acording to the WaterLayerGrid Value
+                    InstancedGridMesh->SetCustomDataValue(Index, 3, static_cast<float>(WaterLayerGrid[Index]) / 100.0);
+
+                }
+                else {
+					InstancedGridMesh->SetCustomDataValue(Index, 0, GrayColor.R);
+					InstancedGridMesh->SetCustomDataValue(Index, 1, GrayColor.G);
+					InstancedGridMesh->SetCustomDataValue(Index, 2, GrayColor.B);
+                    InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                }
+            }
+        }
+        break;
+    case ELayerEnum::Electricity:
+		// for loop through the ElectricityLayerGrid and set the material color according to the value
+        for (int32 y = 0; y < GridSize; ++y)
+        {
+            for (int32 x = 0; x < GridSize; ++x)
+            {
+                int32 Index = GetIndex(x, y);
+                if (ElectricityLayerGrid[Index] > 0)
+                {
+                    InstancedGridMesh->SetCustomDataValue(Index, 0, YellowColor.R);
+                    InstancedGridMesh->SetCustomDataValue(Index, 1, YellowColor.G);
+                    InstancedGridMesh->SetCustomDataValue(Index, 2, YellowColor.B);
+                    InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                }
+                else {
+					InstancedGridMesh->SetCustomDataValue(Index, 0, GrayColor.R);
+					InstancedGridMesh->SetCustomDataValue(Index, 1, GrayColor.G);
+					InstancedGridMesh->SetCustomDataValue(Index, 2, GrayColor.B);
+                    InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                }
+            }
+        }
+        break;
+    case ELayerEnum::Satisfaction:
+		// for loop through the PopulationSatisfactionLayerGrid and set the material color according to the value
+        for (int32 y = 0; y < GridSize; ++y)
+        {
+            for (int32 x = 0; x < GridSize; ++x)
+            {
+                int32 Index = GetIndex(x, y);
+                if (PopulationSatisfactionLayerGrid[Index] > 0)
+                {
+                    InstancedGridMesh->SetCustomDataValue(Index, 0, GreenColor.R);
+                    InstancedGridMesh->SetCustomDataValue(Index, 1, GreenColor.G);
+                    InstancedGridMesh->SetCustomDataValue(Index, 2, GreenColor.B);
+                    InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                }
+                else {
+                    InstancedGridMesh->SetCustomDataValue(Index, 0, GrayColor.R);
+                    InstancedGridMesh->SetCustomDataValue(Index, 1, GrayColor.G);
+                    InstancedGridMesh->SetCustomDataValue(Index, 2, GrayColor.B);
+                    InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                }
+            }
+        }
+        break;
+    case ELayerEnum::Polution:
+        // for loop through the PolutionLayerGrid and set the material color according to the value
+        for (int32 y = 0; y < GridSize; ++y)
+        {
+            for (int32 x = 0; x < GridSize; ++x)
+            {
+                int32 Index = GetIndex(x, y);
+                if (PolutionLayerGrid[Index] > 0)
+                {
+                    InstancedGridMesh->SetCustomDataValue(Index, 0, YellowColor.R);
+                    InstancedGridMesh->SetCustomDataValue(Index, 1, YellowColor.G);
+                    InstancedGridMesh->SetCustomDataValue(Index, 2, YellowColor.B);
+                    InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                }
+                else {
+                    InstancedGridMesh->SetCustomDataValue(Index, 0, GrayColor.R);
+                    InstancedGridMesh->SetCustomDataValue(Index, 1, GrayColor.G);
+                    InstancedGridMesh->SetCustomDataValue(Index, 2, GrayColor.B);
+                    InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                }
+            }
+        }
+        break;
+    case ELayerEnum::Density:
+
+        break;
+    case ELayerEnum::Accessibility:
+
+        break;
+    case ELayerEnum::Security:
+
+        break;
+    case ELayerEnum::Grid:
+        
+        for (int32 y = 0; y < GridSize; ++y)
+        {
+            for (int32 x = 0; x < GridSize; ++x)
+            {
+				int32 Index = GetIndex(x, y);
+                const int32 CellValue = Grid[GetIndex(x, y)];
+                // Skip empty cells
+                if (CellValue == EMPTY)
+                {
+                    continue;
+                }
+
+                // If you have a color in DistrictColors, set it
+                if (DistrictColors.Contains(CellValue))
+                {
+                    FLinearColor Color = DistrictColors[CellValue];
+                    // Write R,G,B to custom data
+                    InstancedGridMesh->SetCustomDataValue(Index, 0, Color.R);
+                    InstancedGridMesh->SetCustomDataValue(Index, 1, Color.G);
+                    InstancedGridMesh->SetCustomDataValue(Index, 2, Color.B);
+                    InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                }
+            }
+        }
+        break;
+    default:
+        UE_LOG(LogTemp, Warning, TEXT("UpdateLayerValues: Unknown LayerEnum value!"));
+        break;
+    }
+}
+
 void ACA_CityLayout::GrowDistricts(TArray<int32>& OutGrid)
 {
     OutGrid = Grid;
@@ -420,6 +679,155 @@ void ACA_CityLayout::PatchEmptyCells()
     
 }
 
+TArray<FIntPoint> ACA_CityLayout::GetMooreNeighborsWithinRadius(int32 StartX, int32 StartY, int32 Radius) const
+{
+    TArray<FIntPoint> Neighbors;
+
+    if (Radius <= 0)
+    {
+        return Neighbors;
+    }
+
+    // Loop untuk seluruh offset (dx, dy) dalam radius MaxDistance
+    for (int32 dx = -Radius; dx <= Radius; ++dx)
+    {
+        for (int32 dy = -Radius; dy <= Radius; ++dy)
+        {
+            // Untuk Moore Neighborhood: semua cell di sekitar, termasuk diagonal
+            if (FMath::Abs(dx) + FMath::Abs(dy) <= Radius)
+            {
+                // Cek koordinat baru (x, y)
+                int32 nx = StartX + dx;
+                int32 ny = StartY + dy;
+
+                // Cek apakah di dalam grid dan bukan titik asal
+                if (IsInBounds(nx, ny) && !(dx == 0 && dy == 0))
+                {
+                    Neighbors.Add(FIntPoint(nx, ny));
+                }
+            }
+        }
+    }
+
+    return Neighbors;
+}
+
+
+void ACA_CityLayout::InitializeRoadLayerGridValues()
+{
+	// Initialize the RoadLayerGrid with EMPTY values
+	RoadLayerGrid.Init(EMPTY, GridSize * GridSize);
+	// Set the RoadLayerGrid to the same values as the main grid
+	for (int32 y = 0; y < GridSize; ++y)
+	{
+		for (int32 x = 0; x < GridSize; ++x)
+		{
+			int32 Index = GetIndex(x, y);
+            if (Grid[Index] == ROAD) {
+                RoadLayerGrid[Index] = Grid[Index];
+            }
+			
+		}
+	}
+}
+
+void ACA_CityLayout::InitializeDistrictLayerGridValues()
+{
+    // Initialize the RoadLayerGrid with EMPTY values
+    DistrictLayerGrid.Init(-1, GridSize * GridSize);
+    // Set the RoadLayerGrid to the same values as the main grid
+    for (int32 y = 0; y < GridSize; ++y)
+    {
+        for (int32 x = 0; x < GridSize; ++x)
+        {
+            int32 Index = GetIndex(x, y);
+            if (Grid[Index] > 0) {
+                DistrictLayerGrid[Index] = EMPTY;
+            }
+            else if (Grid[Index] == ROAD) {
+                DistrictLayerGrid[Index] = ROAD;
+            }
+        }
+    }
+}
+
+void ACA_CityLayout::InitializeWaterLayerGridValues()
+{
+    WaterLayerGrid.Init(0, GridSize * GridSize);
+    TArray <FIntPoint> WaterSeedPosition;
+    WaterSeedPosition.Empty();
+    int32 Attempts = 0;
+    const int32 MaxAttempts = GridSize * GridSize;
+
+    while (WaterSeedPosition.Num() < WaterSeedAmount && Attempts < MaxAttempts)
+    {
+        int32 X = RNG.RandRange(0, GridSize - 1);
+        int32 Y = RNG.RandRange(0, GridSize - 1);
+        FIntPoint Pos(X, Y);
+
+        bool IsValid = true;
+        for (const auto& Seed : WaterSeedPosition)
+        {
+            if (ManhattanDistance(Seed, Pos) < WaterMinSeedDistance)
+            {
+                IsValid = false;
+                break;
+            }
+        }
+
+        if (IsValid)
+        {
+            WaterSeedPosition.Add(Pos);
+            WaterLayerGrid[GetIndex(X, Y)] = FMath::Clamp(WaterLayerGrid[GetIndex(X, Y)] + 50, 0, 100);
+            TArray<FIntPoint> Neighbors = GetMooreNeighborsWithinRadius(X, Y, WaterSpreadDistance);
+            // for each Neighbors set the waterlayergrid to 1
+            for (const auto& N : Neighbors)
+            {
+                // Add the WaterLayerGrid on that index with 50 and Clamp the value to 100
+                WaterLayerGrid[GetIndex(N.X, N.Y)] = FMath::Clamp(WaterLayerGrid[GetIndex(N.X, N.Y)] + 50, 0, 100);
+            }
+        }
+        Attempts++;
+    }
+
+    if (SeedPositions.Num() < NumDistricts)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to place all district seeds."));
+    }
+}
+
+void ACA_CityLayout::InitializeElectricityLayerGridValues()
+{
+    ElectricityLayerGrid.Init(0, GridSize * GridSize);
+}
+
+void ACA_CityLayout::InitializePopulationSatisfactionLayerGridValues()
+{
+    PopulationSatisfactionLayerGrid.Init(30, GridSize * GridSize);
+}
+
+void ACA_CityLayout::InitializePolutionLayerGridValues()
+{
+    PolutionLayerGrid.Init(0, GridSize * GridSize);
+}
+
+void ACA_CityLayout::InitializePopulationDensityLayerGridValues()
+{
+    PopulationDensityLayerGrid.Init(0, GridSize * GridSize);
+}
+
+void ACA_CityLayout::InitializeRoadAccessibilityLayerGridValues()
+{
+
+}
+
+void ACA_CityLayout::InitializeSecurityLayerGridValues()
+{
+    SecurityLayerGrid.Init(0, GridSize * GridSize);
+}
+
+
+
 void ACA_CityLayout::Simulate()
 {
     TArray<int32> NewGrid;
@@ -434,8 +842,6 @@ void ACA_CityLayout::Simulate()
             UE_LOG(LogTemp, Warning, TEXT("City Layout Simulation Iterations: %d"), Iterations);
             break;
         }
-			
-
         Grid = NewGrid;
         Iterations++;
     }
@@ -451,8 +857,9 @@ void ACA_CityLayout::VisualizeGrid()
 
     // Example: create a random color for each district.
     // (Do this once per district, e.g. in BeginPlay or here.)
-    TMap<int32, FLinearColor> DistrictColors;
+    
     DistrictColors.Add(ROAD, FLinearColor::Black);
+    DistrictColors.Add(JUNCTION, FLinearColor::Gray);
     for (int32 DistrictID = 1; DistrictID <= NumDistricts; ++DistrictID)
     {
         DistrictColors.Add(DistrictID, FLinearColor::MakeRandomColor());
@@ -485,6 +892,7 @@ void ACA_CityLayout::VisualizeGrid()
                 InstancedGridMesh->SetCustomDataValue(InstanceIndex, 0, Color.R);
                 InstancedGridMesh->SetCustomDataValue(InstanceIndex, 1, Color.G);
                 InstancedGridMesh->SetCustomDataValue(InstanceIndex, 2, Color.B);
+                InstancedGridMesh->SetCustomDataValue(InstanceIndex, 3, 1);
             }
         }
     }
