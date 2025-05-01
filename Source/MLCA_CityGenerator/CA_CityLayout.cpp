@@ -879,7 +879,7 @@ void ACA_CityLayout::VisualizeGrid()
 
             // Build an instance transform based on x,y
             FTransform InstanceTransform;
-            InstanceTransform.SetLocation(FVector(x * CellSize, y * CellSize, 0.0f));
+            InstanceTransform.SetLocation(FVector(y * CellSize, x * CellSize, 0.0f));
 
             // Add instance
             const int32 InstanceIndex = InstancedGridMesh->AddInstance(InstanceTransform);
