@@ -58,6 +58,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Water")
 	int32 WaterSpreadDistance = 10;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Electricity")
+	int32 ElectricitySpreadDistance = 7;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Electricity")
+	int32 SchoolSpreadDistance = 7;
+
 	UPROPERTY(BlueprintReadOnly)
 	int32 Iterations = 0;
 
@@ -169,6 +175,8 @@ protected:
     void AddRoads(TArray<int32>& GridRef);
 
 	void PatchEmptyCells();
+
+	TArray<FIntPoint> GetVonNeumannNeighborsWithinRadius(int32 StartX, int32 StartY, int32 Radius) const;
 
 	TArray<FIntPoint> GetMooreNeighborsWithinRadius(int32 StartX, int32 StartY, int32 Radius) const;
 

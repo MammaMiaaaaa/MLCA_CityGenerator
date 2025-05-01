@@ -419,7 +419,7 @@ void ACA_CityLayout::UpdateISMToSpecificLayer(ELayerEnum LayerEnum)
                     InstancedGridMesh->SetCustomDataValue(Index, 1, BlueColor.G);
                     InstancedGridMesh->SetCustomDataValue(Index, 2, BlueColor.B);
                     InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
-                    InstancedGridMesh->SetCustomDataValue(Index, 4, 0.5); InstancedGridMesh->SetCustomDataValue(Index, 4, 0.5);
+                    InstancedGridMesh->SetCustomDataValue(Index, 4, 0.5);
                 }
 				else if (DistrictLayerGrid[Index] == INDUSTRIAL) {
 					InstancedGridMesh->SetCustomDataValue(Index, 0, YellowColor.R);
@@ -491,7 +491,7 @@ void ACA_CityLayout::UpdateISMToSpecificLayer(ELayerEnum LayerEnum)
                     InstancedGridMesh->SetCustomDataValue(Index, 0, YellowColor.R);
                     InstancedGridMesh->SetCustomDataValue(Index, 1, YellowColor.G);
                     InstancedGridMesh->SetCustomDataValue(Index, 2, YellowColor.B);
-                    InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                    InstancedGridMesh->SetCustomDataValue(Index, 3, static_cast<float>(ElectricityLayerGrid[Index]) / 100.0);
                     InstancedGridMesh->SetCustomDataValue(Index, 4, 0.5);
                 }
                 else {
@@ -516,7 +516,7 @@ void ACA_CityLayout::UpdateISMToSpecificLayer(ELayerEnum LayerEnum)
                     InstancedGridMesh->SetCustomDataValue(Index, 0, GreenColor.R);
                     InstancedGridMesh->SetCustomDataValue(Index, 1, GreenColor.G);
                     InstancedGridMesh->SetCustomDataValue(Index, 2, GreenColor.B);
-                    InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                    InstancedGridMesh->SetCustomDataValue(Index, 3, static_cast<float>(PopulationSatisfactionLayerGrid[Index]) / 100.0);
                     InstancedGridMesh->SetCustomDataValue(Index, 4, 0.5);
                 }
                 else {
@@ -606,7 +606,7 @@ void ACA_CityLayout::AddBuildingEffects(EBuildingTypeEnum BuildingType, int32 Ti
 	case EBuildingTypeEnum::WaterTower:
 		// Add water tower effects
         WaterLayerGrid[GetIndex(TileLocationX, TileLocationY)] = FMath::Clamp(WaterLayerGrid[GetIndex(TileLocationX, TileLocationY)] + 50, 0, 100);
-        Neighbors = GetMooreNeighborsWithinRadius(TileLocationX, TileLocationY, WaterSpreadDistance);
+        Neighbors = GetVonNeumannNeighborsWithinRadius(TileLocationX, TileLocationY, WaterSpreadDistance);
         // for each Neighbors add the waterlayergrid value with 50 and clamp the value to 100
         for (const auto& N : Neighbors)
         {
@@ -614,9 +614,28 @@ void ACA_CityLayout::AddBuildingEffects(EBuildingTypeEnum BuildingType, int32 Ti
             WaterLayerGrid[GetIndex(N.X, N.Y)] = FMath::Clamp(WaterLayerGrid[GetIndex(N.X, N.Y)] + 50, 0, 100);
         }
 		break;
-	//case EBuildingTypeEnum::PowerPlant:
-	//	// Add power plant effects
-	//	break;
+	case EBuildingTypeEnum::ElectricityTower:
+		// Add Electricity Tower effects
+        ElectricityLayerGrid[GetIndex(TileLocationX, TileLocationY)] = FMath::Clamp(ElectricityLayerGrid[GetIndex(TileLocationX, TileLocationY)] + 50, 0, 100);
+        Neighbors = GetMooreNeighborsWithinRadius(TileLocationX, TileLocationY, ElectricitySpreadDistance);
+        // for each Neighbors add the ElectricityLayerGrid value with 50 and clamp the value to 100
+        for (const auto& N : Neighbors)
+        {
+            // Add the WaterLayerGrid on that index with 50 and Clamp the value to 100
+            ElectricityLayerGrid[GetIndex(N.X, N.Y)] = FMath::Clamp(ElectricityLayerGrid[GetIndex(N.X, N.Y)] + 50, 0, 100);
+        }
+		break;
+	case EBuildingTypeEnum::School:
+        // Add Electricity Tower effects
+        PopulationSatisfactionLayerGrid[GetIndex(TileLocationX, TileLocationY)] = FMath::Clamp(PopulationSatisfactionLayerGrid[GetIndex(TileLocationX, TileLocationY)] + 50, 0, 100);
+        Neighbors = GetMooreNeighborsWithinRadius(TileLocationX, TileLocationY, SchoolSpreadDistance);
+        // for each Neighbors add the PopulationSatisfactionLayerGrid value with 50 and clamp the value to 100
+        for (const auto& N : Neighbors)
+        {
+            // Add the WaterLayerGrid on that index with 50 and Clamp the value to 100
+            PopulationSatisfactionLayerGrid[GetIndex(N.X, N.Y)] = FMath::Clamp(PopulationSatisfactionLayerGrid[GetIndex(N.X, N.Y)] + 30, 0, 100);
+        }
+        break;
 	default:
 		break;
 	}
@@ -721,7 +740,7 @@ void ACA_CityLayout::PatchEmptyCells()
     
 }
 
-TArray<FIntPoint> ACA_CityLayout::GetMooreNeighborsWithinRadius(int32 StartX, int32 StartY, int32 Radius) const
+TArray<FIntPoint> ACA_CityLayout::GetVonNeumannNeighborsWithinRadius(int32 StartX, int32 StartY, int32 Radius) const
 {
     TArray<FIntPoint> Neighbors;
 
@@ -735,7 +754,7 @@ TArray<FIntPoint> ACA_CityLayout::GetMooreNeighborsWithinRadius(int32 StartX, in
     {
         for (int32 dy = -Radius; dy <= Radius; ++dy)
         {
-            // Untuk Moore Neighborhood: semua cell di sekitar, termasuk diagonal
+            // Untuk VonNeumann Neighborhood: semua cell di sekitar, termasuk diagonal
             if (FMath::Abs(dx) + FMath::Abs(dy) <= Radius)
             {
                 // Cek koordinat baru (x, y)
@@ -750,6 +769,31 @@ TArray<FIntPoint> ACA_CityLayout::GetMooreNeighborsWithinRadius(int32 StartX, in
             }
         }
     }
+
+    return Neighbors;
+}
+
+TArray<FIntPoint> ACA_CityLayout::GetMooreNeighborsWithinRadius(int32 StartX, int32 StartY, int32 Radius) const
+{
+	TArray<FIntPoint> Neighbors;
+
+    if (Radius <= 0)
+    {
+        return Neighbors;
+    }
+
+	// Loop untuk seluruh offset (dx, dy) dalam radius MaxDistance
+	for (int32 x = StartX - Radius; x <= StartX + Radius; ++x)
+	{
+		for (int32 y = StartY - Radius; y <= StartY + Radius; ++y)
+		{
+			// Cek apakah di dalam grid dan bukan titik asal
+			if (IsInBounds(x, y) && !(x == StartX && y == StartY))
+			{
+				Neighbors.Add(FIntPoint(x, y));
+			}
+		}
+	}
 
     return Neighbors;
 }
@@ -821,7 +865,7 @@ void ACA_CityLayout::InitializeWaterLayerGridValues()
         {
             WaterSeedPosition.Add(Pos);
             WaterLayerGrid[GetIndex(X, Y)] = FMath::Clamp(WaterLayerGrid[GetIndex(X, Y)] + 50, 0, 100);
-            TArray<FIntPoint> Neighbors = GetMooreNeighborsWithinRadius(X, Y, WaterSpreadDistance);
+            TArray<FIntPoint> Neighbors = GetVonNeumannNeighborsWithinRadius(X, Y, WaterSpreadDistance);
             // for each Neighbors set the waterlayergrid to 1
             for (const auto& N : Neighbors)
             {
@@ -845,7 +889,7 @@ void ACA_CityLayout::InitializeElectricityLayerGridValues()
 
 void ACA_CityLayout::InitializePopulationSatisfactionLayerGridValues()
 {
-    PopulationSatisfactionLayerGrid.Init(30, GridSize * GridSize);
+    PopulationSatisfactionLayerGrid.Init(10, GridSize * GridSize);
 }
 
 void ACA_CityLayout::InitializePolutionLayerGridValues()
