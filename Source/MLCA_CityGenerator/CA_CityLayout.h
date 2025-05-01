@@ -7,6 +7,7 @@
 #include "Components/InstancedStaticMeshComponent.h"
 #include "RoadStruct.h"
 #include "LayerEnum.h"
+#include "BuildingTypeEnum.h"
 #include "CA_CityLayout.generated.h"
 
 
@@ -143,6 +144,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void UpdateISMToSpecificLayer(ELayerEnum LayerEnum);
+
+	UFUNCTION(BlueprintCallable)
+	void AddBuildingEffects(EBuildingTypeEnum BuildingType, int32 TileLocationX, int32 TileLocationY);
 
 
 

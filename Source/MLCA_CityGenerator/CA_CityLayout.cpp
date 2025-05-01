@@ -387,12 +387,14 @@ void ACA_CityLayout::UpdateISMToSpecificLayer(ELayerEnum LayerEnum)
                     InstancedGridMesh->SetCustomDataValue(Index, 1, BlackColor.G);
                     InstancedGridMesh->SetCustomDataValue(Index, 2, BlackColor.B);
                     InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                    InstancedGridMesh->SetCustomDataValue(Index, 4, 0.5);
 				}
                 else {
 					InstancedGridMesh->SetCustomDataValue(Index, 0, GrayColor.R);
 					InstancedGridMesh->SetCustomDataValue(Index, 1, GrayColor.G);
 					InstancedGridMesh->SetCustomDataValue(Index, 2, GrayColor.B);
                     InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                    InstancedGridMesh->SetCustomDataValue(Index, 4, 0);
                 }
 			}
 		}
@@ -410,36 +412,42 @@ void ACA_CityLayout::UpdateISMToSpecificLayer(ELayerEnum LayerEnum)
                     InstancedGridMesh->SetCustomDataValue(Index, 1, GreenColor.G);
                     InstancedGridMesh->SetCustomDataValue(Index, 2, GreenColor.B);
                     InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                    InstancedGridMesh->SetCustomDataValue(Index, 4, 0.5);
                 }
                 else if(DistrictLayerGrid[Index] == COMMERCIAL) {
                     InstancedGridMesh->SetCustomDataValue(Index, 0, BlueColor.R);
                     InstancedGridMesh->SetCustomDataValue(Index, 1, BlueColor.G);
                     InstancedGridMesh->SetCustomDataValue(Index, 2, BlueColor.B);
                     InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                    InstancedGridMesh->SetCustomDataValue(Index, 4, 0.5); InstancedGridMesh->SetCustomDataValue(Index, 4, 0.5);
                 }
 				else if (DistrictLayerGrid[Index] == INDUSTRIAL) {
 					InstancedGridMesh->SetCustomDataValue(Index, 0, YellowColor.R);
 					InstancedGridMesh->SetCustomDataValue(Index, 1, YellowColor.G);
 					InstancedGridMesh->SetCustomDataValue(Index, 2, YellowColor.B);
                     InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                    InstancedGridMesh->SetCustomDataValue(Index, 4, 0.5);
 				}
 				else if (DistrictLayerGrid[Index] == ROAD) {
 					InstancedGridMesh->SetCustomDataValue(Index, 0, BlackColor.R);
 					InstancedGridMesh->SetCustomDataValue(Index, 1, BlackColor.G);
 					InstancedGridMesh->SetCustomDataValue(Index, 2, BlackColor.B);
                     InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                    InstancedGridMesh->SetCustomDataValue(Index, 4, 0.5);
 				}
 				else if (DistrictLayerGrid[Index] == EMPTY) {
 					InstancedGridMesh->SetCustomDataValue(Index, 0, GrayColor.R);
 					InstancedGridMesh->SetCustomDataValue(Index, 1, GrayColor.G);
 					InstancedGridMesh->SetCustomDataValue(Index, 2, GrayColor.B);
                     InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                    InstancedGridMesh->SetCustomDataValue(Index, 4, 0);
 				}
 				else {
 					InstancedGridMesh->SetCustomDataValue(Index, 0, GrayColor.R);
 					InstancedGridMesh->SetCustomDataValue(Index, 1, GrayColor.G);
 					InstancedGridMesh->SetCustomDataValue(Index, 2, GrayColor.B);
                     InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                    InstancedGridMesh->SetCustomDataValue(Index, 4, 0);
 				}
             }
         }
@@ -458,6 +466,7 @@ void ACA_CityLayout::UpdateISMToSpecificLayer(ELayerEnum LayerEnum)
                     InstancedGridMesh->SetCustomDataValue(Index, 2, BlueColor.B);
                     // Set Custom Data Value 3 acording to the WaterLayerGrid Value
                     InstancedGridMesh->SetCustomDataValue(Index, 3, static_cast<float>(WaterLayerGrid[Index]) / 100.0);
+                    InstancedGridMesh->SetCustomDataValue(Index, 4, 0.5);
 
                 }
                 else {
@@ -465,6 +474,7 @@ void ACA_CityLayout::UpdateISMToSpecificLayer(ELayerEnum LayerEnum)
 					InstancedGridMesh->SetCustomDataValue(Index, 1, GrayColor.G);
 					InstancedGridMesh->SetCustomDataValue(Index, 2, GrayColor.B);
                     InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                    InstancedGridMesh->SetCustomDataValue(Index, 4, 0);
                 }
             }
         }
@@ -482,12 +492,14 @@ void ACA_CityLayout::UpdateISMToSpecificLayer(ELayerEnum LayerEnum)
                     InstancedGridMesh->SetCustomDataValue(Index, 1, YellowColor.G);
                     InstancedGridMesh->SetCustomDataValue(Index, 2, YellowColor.B);
                     InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                    InstancedGridMesh->SetCustomDataValue(Index, 4, 0.5);
                 }
                 else {
 					InstancedGridMesh->SetCustomDataValue(Index, 0, GrayColor.R);
 					InstancedGridMesh->SetCustomDataValue(Index, 1, GrayColor.G);
 					InstancedGridMesh->SetCustomDataValue(Index, 2, GrayColor.B);
                     InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                    InstancedGridMesh->SetCustomDataValue(Index, 4, 0);
                 }
             }
         }
@@ -505,12 +517,14 @@ void ACA_CityLayout::UpdateISMToSpecificLayer(ELayerEnum LayerEnum)
                     InstancedGridMesh->SetCustomDataValue(Index, 1, GreenColor.G);
                     InstancedGridMesh->SetCustomDataValue(Index, 2, GreenColor.B);
                     InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                    InstancedGridMesh->SetCustomDataValue(Index, 4, 0.5);
                 }
                 else {
                     InstancedGridMesh->SetCustomDataValue(Index, 0, GrayColor.R);
                     InstancedGridMesh->SetCustomDataValue(Index, 1, GrayColor.G);
                     InstancedGridMesh->SetCustomDataValue(Index, 2, GrayColor.B);
                     InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                    InstancedGridMesh->SetCustomDataValue(Index, 4, 0);
                 }
             }
         }
@@ -528,12 +542,14 @@ void ACA_CityLayout::UpdateISMToSpecificLayer(ELayerEnum LayerEnum)
                     InstancedGridMesh->SetCustomDataValue(Index, 1, YellowColor.G);
                     InstancedGridMesh->SetCustomDataValue(Index, 2, YellowColor.B);
                     InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                    InstancedGridMesh->SetCustomDataValue(Index, 4, 0.5);
                 }
                 else {
                     InstancedGridMesh->SetCustomDataValue(Index, 0, GrayColor.R);
                     InstancedGridMesh->SetCustomDataValue(Index, 1, GrayColor.G);
                     InstancedGridMesh->SetCustomDataValue(Index, 2, GrayColor.B);
                     InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                    InstancedGridMesh->SetCustomDataValue(Index, 4, 0);
                 }
             }
         }
@@ -570,6 +586,7 @@ void ACA_CityLayout::UpdateISMToSpecificLayer(ELayerEnum LayerEnum)
                     InstancedGridMesh->SetCustomDataValue(Index, 1, Color.G);
                     InstancedGridMesh->SetCustomDataValue(Index, 2, Color.B);
                     InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                    InstancedGridMesh->SetCustomDataValue(Index, 4, 0.5);
                 }
             }
         }
@@ -578,6 +595,31 @@ void ACA_CityLayout::UpdateISMToSpecificLayer(ELayerEnum LayerEnum)
         UE_LOG(LogTemp, Warning, TEXT("UpdateLayerValues: Unknown LayerEnum value!"));
         break;
     }
+}
+
+void ACA_CityLayout::AddBuildingEffects(EBuildingTypeEnum BuildingType, int32 TileLocationX, int32 TileLocationY)
+{
+    TArray<FIntPoint> Neighbors;
+	// Add building effects based on the building type
+	switch (BuildingType)
+	{
+	case EBuildingTypeEnum::WaterTower:
+		// Add water tower effects
+        WaterLayerGrid[GetIndex(TileLocationX, TileLocationY)] = FMath::Clamp(WaterLayerGrid[GetIndex(TileLocationX, TileLocationY)] + 50, 0, 100);
+        Neighbors = GetMooreNeighborsWithinRadius(TileLocationX, TileLocationY, WaterSpreadDistance);
+        // for each Neighbors add the waterlayergrid value with 50 and clamp the value to 100
+        for (const auto& N : Neighbors)
+        {
+            // Add the WaterLayerGrid on that index with 50 and Clamp the value to 100
+            WaterLayerGrid[GetIndex(N.X, N.Y)] = FMath::Clamp(WaterLayerGrid[GetIndex(N.X, N.Y)] + 50, 0, 100);
+        }
+		break;
+	//case EBuildingTypeEnum::PowerPlant:
+	//	// Add power plant effects
+	//	break;
+	default:
+		break;
+	}
 }
 
 void ACA_CityLayout::GrowDistricts(TArray<int32>& OutGrid)
@@ -893,6 +935,7 @@ void ACA_CityLayout::VisualizeGrid()
                 InstancedGridMesh->SetCustomDataValue(InstanceIndex, 1, Color.G);
                 InstancedGridMesh->SetCustomDataValue(InstanceIndex, 2, Color.B);
                 InstancedGridMesh->SetCustomDataValue(InstanceIndex, 3, 1);
+                InstancedGridMesh->SetCustomDataValue(InstanceIndex, 4, 0.5);
             }
         }
     }
@@ -1065,6 +1108,7 @@ void ACA_CityLayout::GetRoadJunctions()
 		InstancedGridMesh->SetCustomDataValue(Index, 0, Color.R);
 		InstancedGridMesh->SetCustomDataValue(Index, 1, Color.G);
 		InstancedGridMesh->SetCustomDataValue(Index, 2, Color.B);
+        InstancedGridMesh->SetCustomDataValue(Index, 4, 0.5);
 	}
 	//print out the number of junctions
 	UE_LOG(LogTemp, Warning, TEXT("Number of Junctions: %d"), Junctions.Num());
