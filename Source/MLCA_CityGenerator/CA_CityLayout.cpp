@@ -541,7 +541,7 @@ void ACA_CityLayout::UpdateISMToSpecificLayer(ELayerEnum LayerEnum)
                     InstancedGridMesh->SetCustomDataValue(Index, 0, YellowColor.R);
                     InstancedGridMesh->SetCustomDataValue(Index, 1, YellowColor.G);
                     InstancedGridMesh->SetCustomDataValue(Index, 2, YellowColor.B);
-                    InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                    InstancedGridMesh->SetCustomDataValue(Index, 3, static_cast<float>(PolutionLayerGrid[Index]) / 100.0);
                     InstancedGridMesh->SetCustomDataValue(Index, 4, 0.5);
                 }
                 else {
@@ -561,7 +561,29 @@ void ACA_CityLayout::UpdateISMToSpecificLayer(ELayerEnum LayerEnum)
 
         break;
     case ELayerEnum::Security:
-
+        // for loop through the PolutionLayerGrid and set the material color according to the value
+        for (int32 y = 0; y < GridSize; ++y)
+        {
+            for (int32 x = 0; x < GridSize; ++x)
+            {
+                int32 Index = GetIndex(x, y);
+                if (SecurityLayerGrid[Index] > 0)
+                {
+                    InstancedGridMesh->SetCustomDataValue(Index, 0, BlueColor.R);
+                    InstancedGridMesh->SetCustomDataValue(Index, 1, BlueColor.G);
+                    InstancedGridMesh->SetCustomDataValue(Index, 2, BlueColor.B);
+                    InstancedGridMesh->SetCustomDataValue(Index, 3, static_cast<float>(SecurityLayerGrid[Index]) / 100.0);
+                    InstancedGridMesh->SetCustomDataValue(Index, 4, 0.5);
+                }
+                else {
+                    InstancedGridMesh->SetCustomDataValue(Index, 0, GrayColor.R);
+                    InstancedGridMesh->SetCustomDataValue(Index, 1, GrayColor.G);
+                    InstancedGridMesh->SetCustomDataValue(Index, 2, GrayColor.B);
+                    InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                    InstancedGridMesh->SetCustomDataValue(Index, 4, 0);
+                }
+            }
+        }
         break;
     case ELayerEnum::Grid:
         
@@ -626,14 +648,72 @@ void ACA_CityLayout::AddBuildingEffects(EBuildingTypeEnum BuildingType, int32 Ti
         }
 		break;
 	case EBuildingTypeEnum::School:
-        // Add Electricity Tower effects
-        PopulationSatisfactionLayerGrid[GetIndex(TileLocationX, TileLocationY)] = FMath::Clamp(PopulationSatisfactionLayerGrid[GetIndex(TileLocationX, TileLocationY)] + 50, 0, 100);
-        Neighbors = GetMooreNeighborsWithinRadius(TileLocationX, TileLocationY, SchoolSpreadDistance);
+        // Add School  effects
+        PopulationSatisfactionLayerGrid[GetIndex(TileLocationX, TileLocationY)] = FMath::Clamp(PopulationSatisfactionLayerGrid[GetIndex(TileLocationX, TileLocationY)] + 30, 0, 100);
+        for (int32 X = TileLocationX; X <= TileLocationX + 5; ++X) {
+			for (int32 Y = TileLocationY; Y <= TileLocationY + 3; ++Y) {
+				TArray<FIntPoint> TempNeighbors = GetMooreNeighborsWithinRadius(X, Y, SchoolSpreadDistance);
+				// for each TempNeighbors add AddUnique to Neighbors
+				for (const auto& N : TempNeighbors)
+				{
+					if (IsInBounds(N.X, N.Y) && !(N.X == TileLocationX && N.Y == TileLocationY))
+					{
+						Neighbors.AddUnique(N);
+					}
+				}
+			}
+        }
         // for each Neighbors add the PopulationSatisfactionLayerGrid value with 50 and clamp the value to 100
         for (const auto& N : Neighbors)
         {
-            // Add the WaterLayerGrid on that index with 50 and Clamp the value to 100
+            // Add the PopulationSatisfactionLayerGrid on that index with 50 and Clamp the value to 100
             PopulationSatisfactionLayerGrid[GetIndex(N.X, N.Y)] = FMath::Clamp(PopulationSatisfactionLayerGrid[GetIndex(N.X, N.Y)] + 30, 0, 100);
+        }
+        break;
+    case EBuildingTypeEnum::Park:
+        // Add Park effects
+        PolutionLayerGrid[GetIndex(TileLocationX, TileLocationY)] = FMath::Clamp(PolutionLayerGrid[GetIndex(TileLocationX, TileLocationY)] - 50, 0, 100);
+        for (int32 X = TileLocationX; X <= TileLocationX + 3; ++X) {
+            for (int32 Y = TileLocationY; Y <= TileLocationY + 2; ++Y) {
+                TArray<FIntPoint> TempNeighbors = GetMooreNeighborsWithinRadius(X, Y, ParkSpreadDistance);
+                // for each TempNeighbors add AddUnique to Neighbors
+                for (const auto& N : TempNeighbors)
+                {
+                    if (IsInBounds(N.X, N.Y) && !(N.X == TileLocationX && N.Y == TileLocationY))
+                    {
+                        Neighbors.AddUnique(N);
+                    }
+                }
+            }
+        }
+        // for each Neighbors add the PopulationSatisfactionLayerGrid value with 50 and clamp the value to 100
+        for (const auto& N : Neighbors)
+        {
+            // Add the PopulationSatisfactionLayerGrid on that index with 50 and Clamp the value to 100
+			PolutionLayerGrid[GetIndex(N.X, N.Y)] = FMath::Clamp(PolutionLayerGrid[GetIndex(N.X, N.Y)] - 50, 0, 100);
+        }
+        break;
+    case EBuildingTypeEnum::PoliceStation:
+        // Add Police Station effects
+        SecurityLayerGrid[GetIndex(TileLocationX, TileLocationY)] = FMath::Clamp(SecurityLayerGrid[GetIndex(TileLocationX, TileLocationY)] + 50, 0, 100);
+        for (int32 X = TileLocationX; X <= TileLocationX + 3; ++X) {
+            for (int32 Y = TileLocationY; Y <= TileLocationY + 2; ++Y) {
+                TArray<FIntPoint> TempNeighbors = GetMooreNeighborsWithinRadius(X, Y, PoliceStationSpreadDistance);
+                // for each TempNeighbors add AddUnique to Neighbors
+                for (const auto& N : TempNeighbors)
+                {
+                    if (IsInBounds(N.X, N.Y) && !(N.X == TileLocationX && N.Y == TileLocationY))
+                    {
+                        Neighbors.AddUnique(N);
+                    }
+                }
+            }
+        }
+        // for each Neighbors add the PopulationSatisfactionLayerGrid value with 50 and clamp the value to 100
+        for (const auto& N : Neighbors)
+        {
+            // Add the PopulationSatisfactionLayerGrid on that index with 50 and Clamp the value to 100
+            SecurityLayerGrid[GetIndex(N.X, N.Y)] = FMath::Clamp(SecurityLayerGrid[GetIndex(N.X, N.Y)] + 50, 0, 100);
         }
         break;
 	default:
@@ -764,7 +844,7 @@ TArray<FIntPoint> ACA_CityLayout::GetVonNeumannNeighborsWithinRadius(int32 Start
                 // Cek apakah di dalam grid dan bukan titik asal
                 if (IsInBounds(nx, ny) && !(dx == 0 && dy == 0))
                 {
-                    Neighbors.Add(FIntPoint(nx, ny));
+                    Neighbors.AddUnique(FIntPoint(nx, ny));
                 }
             }
         }
@@ -790,7 +870,7 @@ TArray<FIntPoint> ACA_CityLayout::GetMooreNeighborsWithinRadius(int32 StartX, in
 			// Cek apakah di dalam grid dan bukan titik asal
 			if (IsInBounds(x, y) && !(x == StartX && y == StartY))
 			{
-				Neighbors.Add(FIntPoint(x, y));
+				Neighbors.AddUnique(FIntPoint(x, y));
 			}
 		}
 	}
@@ -894,7 +974,7 @@ void ACA_CityLayout::InitializePopulationSatisfactionLayerGridValues()
 
 void ACA_CityLayout::InitializePolutionLayerGridValues()
 {
-    PolutionLayerGrid.Init(0, GridSize * GridSize);
+    PolutionLayerGrid.Init(10, GridSize * GridSize);
 }
 
 void ACA_CityLayout::InitializePopulationDensityLayerGridValues()

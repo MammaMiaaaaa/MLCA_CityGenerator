@@ -61,8 +61,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Electricity")
 	int32 ElectricitySpreadDistance = 7;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Electricity")
-	int32 SchoolSpreadDistance = 7;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Satisfaction")
+	int32 SchoolSpreadDistance = 15;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Satisfaction")
+	int32 ParkSpreadDistance = 10;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Satisfaction")
+	int32 PoliceStationSpreadDistance = 15;
 
 	UPROPERTY(BlueprintReadOnly)
 	int32 Iterations = 0;
