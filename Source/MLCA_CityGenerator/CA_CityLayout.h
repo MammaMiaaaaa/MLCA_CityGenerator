@@ -8,6 +8,8 @@
 #include "RoadStruct.h"
 #include "LayerEnum.h"
 #include "BuildingTypeEnum.h"
+#include "DistrictStruct.h"
+#include "DistrictTypeEnum.h"
 #include "CA_CityLayout.generated.h"
 
 
@@ -112,6 +114,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<int32> SecurityLayerGrid;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<FDistrictStruct> DistrictArray;
+
     UFUNCTION(BlueprintCallable, CallInEditor)
     void Initialize();
 
@@ -152,14 +157,13 @@ public:
 	void InitializeLayerValues();
 
 	UFUNCTION(BlueprintCallable)
-	void UpdateLayerValues(ELayerEnum LayerEnum );
-
-	UFUNCTION(BlueprintCallable)
 	void UpdateISMToSpecificLayer(ELayerEnum LayerEnum);
 
 	UFUNCTION(BlueprintCallable)
 	void AddBuildingEffects(EBuildingTypeEnum BuildingType, int32 TileLocationX, int32 TileLocationY);
 
+	UFUNCTION(BlueprintCallable)
+	void CalculateDistrictType();
 
 
 protected:

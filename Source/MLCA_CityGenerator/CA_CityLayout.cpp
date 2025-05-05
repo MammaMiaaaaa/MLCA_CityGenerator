@@ -333,37 +333,6 @@ void ACA_CityLayout::InitializeLayerValues()
     InitializeSecurityLayerGridValues();
 }
 
-void ACA_CityLayout::UpdateLayerValues(ELayerEnum LayerEnum)
-{
-    switch (LayerEnum)
-    {
-    case ELayerEnum::Road:
-
-        break;
-    case ELayerEnum::District:
-        break;
-    case ELayerEnum::Water:
-        break;
-    case ELayerEnum::Electricity:
-        break;
-    case ELayerEnum::Satisfaction:
-        break;
-    case ELayerEnum::Polution:
-        break;
-    case ELayerEnum::Density:
-        break;
-    case ELayerEnum::Accessibility:
-
-        break;
-    case ELayerEnum::Security:
-
-        break;
-    default:
-        UE_LOG(LogTemp, Warning, TEXT("UpdateLayerValues: Unknown LayerEnum value!"));
-        break;
-    }
-}
-
 void ACA_CityLayout::UpdateISMToSpecificLayer(ELayerEnum LayerEnum)
 {
     FLinearColor GrayColor = FLinearColor::Gray;
@@ -721,6 +690,93 @@ void ACA_CityLayout::AddBuildingEffects(EBuildingTypeEnum BuildingType, int32 Ti
 	}
 }
 
+void ACA_CityLayout::CalculateDistrictType()
+{
+	// Loop through the DistrictArray
+	for (int32 i = 0; i < DistrictArray.Num(); ++i)
+	{
+
+		int32 WaterValue = 0;
+		int32 ElectricityValue = 0;
+		int32 PopulationSatisfactionValue = 0;
+		int32 PolutionValue = 0;
+		int32 PopulationDensityValue = 0;
+		int32 RoadAccessibilityValue = 0;
+		int32 SecurityValue = 0;
+
+		bool bIsEnoughWater = false;
+		bool bIsEnoughElectricity = false;
+		bool bIsEnoughPopulationSatisfaction = false;
+		bool bIsEnoughPolution = false;
+		bool bIsEnoughPopulationDensity = false;
+		bool bIsEnoughRoadAccessibility = false;
+		bool bIsEnoughSecurity = false;
+
+		int32 MaxValue = DistrictArray[i].DistrictCellIndex.Num() * 100;
+
+		// Loop for each cell index in the DistrictCellIndex
+        for (int32 j = 0; j < DistrictArray[i].DistrictCellIndex.Num(); ++j)
+        {
+            WaterValue += WaterLayerGrid[DistrictArray[i].DistrictCellIndex[j]];
+            ElectricityValue += ElectricityLayerGrid[DistrictArray[i].DistrictCellIndex[j]];
+            PopulationSatisfactionValue += PopulationSatisfactionLayerGrid[DistrictArray[i].DistrictCellIndex[j]];
+            PolutionValue += PolutionLayerGrid[DistrictArray[i].DistrictCellIndex[j]];
+            PopulationDensityValue += PopulationDensityLayerGrid[DistrictArray[i].DistrictCellIndex[j]];
+            RoadAccessibilityValue += RoadAccessibilityLayerGrid[DistrictArray[i].DistrictCellIndex[j]];
+            SecurityValue += SecurityLayerGrid[DistrictArray[i].DistrictCellIndex[j]];
+
+            if (WaterValue >= MaxValue * 10 / 100) {
+                bIsEnoughWater = true;
+            }
+            if (ElectricityValue >= MaxValue * 10 / 100) {
+                bIsEnoughElectricity = true;
+            }
+            if (PopulationSatisfactionValue >= MaxValue * 10 / 100) {
+                bIsEnoughPopulationSatisfaction = true;
+            }
+            if (PolutionValue < MaxValue * 10 / 100) {
+                bIsEnoughPolution = true;
+            }
+            if (PopulationDensityValue >= MaxValue * 10 / 100) {
+                bIsEnoughPopulationDensity = true;
+            }
+            if (RoadAccessibilityValue >= MaxValue * 10 / 100) {
+                bIsEnoughRoadAccessibility = true;
+            }
+            if (SecurityValue >= MaxValue * 10 / 100) {
+                bIsEnoughSecurity = true;
+            }
+            
+
+        }
+        if (bIsEnoughWater && bIsEnoughElectricity && bIsEnoughPopulationSatisfaction && bIsEnoughPolution && bIsEnoughSecurity)
+        {
+            DistrictArray[i].AvailableDistrictType.AddUnique(EDistrictTypeEnum::Residential);
+			// for each DistrictCellIndex set the DistrictLayerGrid to Residential
+			for (int32 j = 0; j < DistrictArray[i].DistrictCellIndex.Num(); ++j)
+			{
+				DistrictLayerGrid[DistrictArray[i].DistrictCellIndex[j]] = RESIDENTIAL;
+			}
+        }
+        if (bIsEnoughWater && bIsEnoughElectricity && bIsEnoughPopulationDensity && bIsEnoughRoadAccessibility && bIsEnoughSecurity)
+        {
+            DistrictArray[i].AvailableDistrictType.AddUnique(EDistrictTypeEnum::Commercial);
+            for (int32 j = 0; j < DistrictArray[i].DistrictCellIndex.Num(); ++j)
+            {
+                DistrictLayerGrid[DistrictArray[i].DistrictCellIndex[j]] = COMMERCIAL;
+            }
+        }
+        if (bIsEnoughWater && bIsEnoughElectricity && bIsEnoughRoadAccessibility && bIsEnoughPolution)
+        {
+            DistrictArray[i].AvailableDistrictType.AddUnique(EDistrictTypeEnum::Industrial);
+            for (int32 j = 0; j < DistrictArray[i].DistrictCellIndex.Num(); ++j)
+            {
+                DistrictLayerGrid[DistrictArray[i].DistrictCellIndex[j]] = INDUSTRIAL;
+            }
+        }
+	}
+}
+
 void ACA_CityLayout::GrowDistricts(TArray<int32>& OutGrid)
 {
     OutGrid = Grid;
@@ -749,6 +805,44 @@ void ACA_CityLayout::GrowDistricts(TArray<int32>& OutGrid)
             if ((DistrictIDs.Num() == 1 && RNG.FRand() < GrowthProb))
             {
                 OutGrid[Index] = DistrictIDs.Array()[0];
+
+				if (DistrictArray.Num() == 0)
+				{
+					// If the DistrictArray is empty, create a new district
+					FDistrictStruct NewDistrict;
+					NewDistrict.DistrictID = DistrictIDs.Array()[0];
+                    NewDistrict.DistrictType = 0;
+					NewDistrict.DistrictCellIndex.Add(Index);
+
+					DistrictArray.Add(NewDistrict);
+				}
+                else {
+                    // Check if the DistrictArray have DistrictID same with the DistrictIDs.Array()[0]
+
+					bool bFound = false;
+
+                    for (int32 i = 0; i < DistrictArray.Num(); ++i)
+                    {
+                        if (DistrictArray[i].DistrictID == DistrictIDs.Array()[0])
+                        {
+                            // Add the index to the DistrictArray
+                            DistrictArray[i].DistrictCellIndex.Add(Index);
+							bFound = true;
+                            break;
+                        }
+                    }
+                    if (!bFound)
+                    {
+                        // If not found, create a new district
+                        FDistrictStruct NewDistrict;
+                        NewDistrict.DistrictID = DistrictIDs.Array()[0];
+                        NewDistrict.DistrictType = 0;
+                        NewDistrict.DistrictCellIndex.Add(Index);
+                        DistrictArray.Add(NewDistrict);
+                    }
+                }
+                
+
             }
             else if (DistrictIDs.Num() > 1)
             {
@@ -964,7 +1058,7 @@ void ACA_CityLayout::InitializeWaterLayerGridValues()
 
 void ACA_CityLayout::InitializeElectricityLayerGridValues()
 {
-    ElectricityLayerGrid.Init(0, GridSize * GridSize);
+    ElectricityLayerGrid.Init(10, GridSize * GridSize);
 }
 
 void ACA_CityLayout::InitializePopulationSatisfactionLayerGridValues()
@@ -984,12 +1078,12 @@ void ACA_CityLayout::InitializePopulationDensityLayerGridValues()
 
 void ACA_CityLayout::InitializeRoadAccessibilityLayerGridValues()
 {
-
+    RoadAccessibilityLayerGrid.Init(10, GridSize * GridSize);
 }
 
 void ACA_CityLayout::InitializeSecurityLayerGridValues()
 {
-    SecurityLayerGrid.Init(0, GridSize * GridSize);
+    SecurityLayerGrid.Init(10, GridSize * GridSize);
 }
 
 
@@ -1116,8 +1210,6 @@ void ACA_CityLayout::TrimRoads()
 void ACA_CityLayout::RandomWalk(int32 X, int32 Y, TArray<bool>& Visited, int32 PrevIndex)
 {
     int32 Index = GetIndex(X, Y);
-	//bool hasNeighbor = false;
-	//int32 neighborCount = 0;
 
     // Get all neighboring road cells
     TArray<FIntPoint> Neighbors;
@@ -1137,59 +1229,6 @@ void ACA_CityLayout::RandomWalk(int32 X, int32 Y, TArray<bool>& Visited, int32 P
 	{
 		Visited[Index] = false;
 	}
-
-
-
- //   for (const auto& N : GetVonNeumannNeighbors(X, Y))
- //   {
- //       int32 NeighborIndex = GetIndex(N.X, N.Y);
- //       if (Grid[NeighborIndex] == ROAD && NeighborIndex != PrevIndex)
- //       {
- //           hasNeighbor = true;
- //       }
-	//	// Check if the neighbor is not visited and is a road
- //       if (Grid[NeighborIndex] == ROAD && !Visited[NeighborIndex])
- //       {
- //           Neighbors.Add(N);
- //       }
-	//	if (Grid[NeighborIndex] == ROAD)
-	//	{
-	//		neighborCount++;
-	//	}
-
- //   }
- //   //Visited[Index] = hasNeighbor;
-
- //   // If the cell is in the edges of the grid
- //   if (X == 0 || Y == 0 || X == GridSize - 1 || Y == GridSize - 1)
- //   {
- //       // Mark the cell as visited
- //       Visited[Index] = true;
- //       
- //   }
-
-	//if (Neighbors.Num() == 0)
-	//{
-	//	return; // No neighbors to walk to
-	//}
- //   else {
-	//	// Mark the current cell as visited
-	//	Visited[Index] = true;
- //   }
-
- //   /*if (neighborCount > 1)
-	//{
-	//	Visited[Index] = true;
-	//}*/
-	
-    
-    
-
-    // Recursively walk to each neighbor
-    /*for (const auto& N : Neighbors)
-    {
-        RandomWalk(N.X, N.Y, Visited, Index);
-    }*/
 }
 
 void ACA_CityLayout::GetRoadJunctions()
