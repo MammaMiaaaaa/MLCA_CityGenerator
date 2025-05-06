@@ -409,14 +409,14 @@ void ACA_CityLayout::UpdateISMToSpecificLayer(ELayerEnum LayerEnum)
 					InstancedGridMesh->SetCustomDataValue(Index, 1, GrayColor.G);
 					InstancedGridMesh->SetCustomDataValue(Index, 2, GrayColor.B);
                     InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
-                    InstancedGridMesh->SetCustomDataValue(Index, 4, 0);
+                    InstancedGridMesh->SetCustomDataValue(Index, 4, 0.5);
 				}
 				else {
 					InstancedGridMesh->SetCustomDataValue(Index, 0, GrayColor.R);
 					InstancedGridMesh->SetCustomDataValue(Index, 1, GrayColor.G);
 					InstancedGridMesh->SetCustomDataValue(Index, 2, GrayColor.B);
                     InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
-                    InstancedGridMesh->SetCustomDataValue(Index, 4, 0);
+                    InstancedGridMesh->SetCustomDataValue(Index, 4, 0.5);
 				}
             }
         }
@@ -696,13 +696,13 @@ void ACA_CityLayout::CalculateDistrictType()
 	for (int32 i = 0; i < DistrictArray.Num(); ++i)
 	{
 
-		int32 WaterValue = 0;
-		int32 ElectricityValue = 0;
-		int32 PopulationSatisfactionValue = 0;
-		int32 PolutionValue = 0;
-		int32 PopulationDensityValue = 0;
-		int32 RoadAccessibilityValue = 0;
-		int32 SecurityValue = 0;
+		float WaterValue = 0;
+        float ElectricityValue = 0;
+        float PopulationSatisfactionValue = 0;
+        float PolutionValue = 0;
+        float PopulationDensityValue = 0;
+        float RoadAccessibilityValue = 0;
+        float SecurityValue = 0;
 
 		bool bIsEnoughWater = false;
 		bool bIsEnoughElectricity = false;
@@ -712,7 +712,7 @@ void ACA_CityLayout::CalculateDistrictType()
 		bool bIsEnoughRoadAccessibility = false;
 		bool bIsEnoughSecurity = false;
 
-		int32 MaxValue = DistrictArray[i].DistrictCellIndex.Num() * 100;
+        float MaxValue = DistrictArray[i].DistrictCellIndex.Num() * 100;
 
 		// Loop for each cell index in the DistrictCellIndex
         for (int32 j = 0; j < DistrictArray[i].DistrictCellIndex.Num(); ++j)
@@ -749,6 +749,14 @@ void ACA_CityLayout::CalculateDistrictType()
             
 
         }
+		DistrictArray[i].WaterAvailValue = (WaterValue/MaxValue);
+		DistrictArray[i].ElectricityAvailValue = (ElectricityValue / MaxValue);
+		DistrictArray[i].PopulationSatisfactionValue = (PopulationSatisfactionValue / MaxValue);
+		DistrictArray[i].PolutionValue = (PolutionValue / MaxValue);
+		DistrictArray[i].PopulationDensityValue = (PopulationDensityValue / MaxValue);
+		DistrictArray[i].RoadAccessibilityValue = (RoadAccessibilityValue / MaxValue);
+		DistrictArray[i].SecurityValue = (SecurityValue / MaxValue);
+
         if (bIsEnoughWater && bIsEnoughElectricity && bIsEnoughPopulationSatisfaction && bIsEnoughPolution && bIsEnoughSecurity)
         {
             DistrictArray[i].AvailableDistrictType.AddUnique(EDistrictTypeEnum::Residential);
@@ -775,6 +783,56 @@ void ACA_CityLayout::CalculateDistrictType()
             }
         }
 	}
+}
+
+void ACA_CityLayout::GetAllDistricts()
+{
+	// Loop through the grid and find all districts
+    for (int32 y = 0; y < GridSize; ++y) {
+		for (int32 x = 0; x < GridSize; ++x) {
+			int32 Index = GetIndex(x, y);
+			if (Grid[Index] > 0) {
+                if (DistrictArray.Num() == 0)
+                {
+                    // If the DistrictArray is empty, create a new district
+                    FDistrictStruct NewDistrict;
+                    NewDistrict.DistrictID = Grid[Index];
+                    NewDistrict.DistrictType = 0;
+                    NewDistrict.DistrictCellIndex.Add(Index);
+
+                    DistrictArray.Add(NewDistrict);
+                }
+                else {
+                    // Check if the DistrictArray have DistrictID same with the DistrictIDs.Array()[0]
+
+                    bool bFound = false;
+
+                    for (int32 i = 0; i < DistrictArray.Num(); ++i)
+                    {
+                        if (DistrictArray[i].DistrictID == Grid[Index])
+                        {
+                            // Add the index to the DistrictArray
+                            DistrictArray[i].DistrictCellIndex.Add(Index);
+                            bFound = true;
+                            break;
+                        }
+                    }
+                    if (!bFound)
+                    {
+                        // If not found, create a new district
+                        FDistrictStruct NewDistrict;
+                        NewDistrict.DistrictID = Grid[Index];
+                        NewDistrict.DistrictType = 0;
+                        NewDistrict.DistrictCellIndex.Add(Index);
+                        DistrictArray.Add(NewDistrict);
+                    }
+                }
+			}
+		}
+    }
+
+
+    
 }
 
 void ACA_CityLayout::GrowDistricts(TArray<int32>& OutGrid)
@@ -806,41 +864,41 @@ void ACA_CityLayout::GrowDistricts(TArray<int32>& OutGrid)
             {
                 OutGrid[Index] = DistrictIDs.Array()[0];
 
-				if (DistrictArray.Num() == 0)
-				{
-					// If the DistrictArray is empty, create a new district
-					FDistrictStruct NewDistrict;
-					NewDistrict.DistrictID = DistrictIDs.Array()[0];
-                    NewDistrict.DistrictType = 0;
-					NewDistrict.DistrictCellIndex.Add(Index);
+				//if (DistrictArray.Num() == 0)
+				//{
+				//	// If the DistrictArray is empty, create a new district
+				//	FDistrictStruct NewDistrict;
+				//	NewDistrict.DistrictID = DistrictIDs.Array()[0];
+    //                NewDistrict.DistrictType = 0;
+				//	NewDistrict.DistrictCellIndex.Add(Index);
 
-					DistrictArray.Add(NewDistrict);
-				}
-                else {
-                    // Check if the DistrictArray have DistrictID same with the DistrictIDs.Array()[0]
+				//	DistrictArray.Add(NewDistrict);
+				//}
+    //            else {
+    //                // Check if the DistrictArray have DistrictID same with the DistrictIDs.Array()[0]
 
-					bool bFound = false;
+				//	bool bFound = false;
 
-                    for (int32 i = 0; i < DistrictArray.Num(); ++i)
-                    {
-                        if (DistrictArray[i].DistrictID == DistrictIDs.Array()[0])
-                        {
-                            // Add the index to the DistrictArray
-                            DistrictArray[i].DistrictCellIndex.Add(Index);
-							bFound = true;
-                            break;
-                        }
-                    }
-                    if (!bFound)
-                    {
-                        // If not found, create a new district
-                        FDistrictStruct NewDistrict;
-                        NewDistrict.DistrictID = DistrictIDs.Array()[0];
-                        NewDistrict.DistrictType = 0;
-                        NewDistrict.DistrictCellIndex.Add(Index);
-                        DistrictArray.Add(NewDistrict);
-                    }
-                }
+    //                for (int32 i = 0; i < DistrictArray.Num(); ++i)
+    //                {
+    //                    if (DistrictArray[i].DistrictID == DistrictIDs.Array()[0])
+    //                    {
+    //                        // Add the index to the DistrictArray
+    //                        DistrictArray[i].DistrictCellIndex.Add(Index);
+				//			bFound = true;
+    //                        break;
+    //                    }
+    //                }
+    //                if (!bFound)
+    //                {
+    //                    // If not found, create a new district
+    //                    FDistrictStruct NewDistrict;
+    //                    NewDistrict.DistrictID = DistrictIDs.Array()[0];
+    //                    NewDistrict.DistrictType = 0;
+    //                    NewDistrict.DistrictCellIndex.Add(Index);
+    //                    DistrictArray.Add(NewDistrict);
+    //                }
+    //            }
                 
 
             }

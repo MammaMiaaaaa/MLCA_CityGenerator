@@ -20,5 +20,20 @@ struct FDistrictStruct
 	TArray<int32> DistrictCellIndex;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "District")
 	TArray<EDistrictTypeEnum> AvailableDistrictType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "District")
+	float WaterAvailValue = 0.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "District")
+	float ElectricityAvailValue = 0.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "District")
+	float PopulationSatisfactionValue = 0.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "District")
+	float PolutionValue = 0.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "District")
+	float PopulationDensityValue = 0.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "District")
+	float RoadAccessibilityValue = 0.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "District")
+	float SecurityValue = 0.0f;
 	
 };

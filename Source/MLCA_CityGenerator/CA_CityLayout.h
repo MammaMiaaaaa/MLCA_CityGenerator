@@ -165,6 +165,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void CalculateDistrictType();
 
+	UFUNCTION(BlueprintCallable)
+	void GetAllDistricts();
+
 
 protected:
 	// Called when the game starts or when spawned
