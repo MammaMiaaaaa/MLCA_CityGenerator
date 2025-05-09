@@ -15,8 +15,11 @@ ACA_CityLayout::ACA_CityLayout()
     InstancedGridMesh = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("InstancedGridMesh"));
     RootComponent = InstancedGridMesh;
 
+	ISMBlocks = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("ISMBlock"));
+
     // We want 3 floats per instance (R, G, B, A).
     InstancedGridMesh->NumCustomDataFloats = 4;
+	ISMBlocks->NumCustomDataFloats = 4;
 
 }
 
@@ -835,6 +838,60 @@ void ACA_CityLayout::GetAllDistricts()
     
 }
 
+void ACA_CityLayout::PartitionGridBSP(TArray<int32> DistrictIndex)
+{
+    // Siapkan output
+    int32 nextID = 0;
+    minBlockValue = DistrictIndex[0];
+	maxBlockValue = DistrictIndex.Last();
+	int32 X = GetMinX(DistrictIndex);
+    int32 Y = GetMinY(DistrictIndex);
+	int32 Width = GetMaxWidth(DistrictIndex, X);
+	int32 Height = GetMaxHeight(DistrictIndex, Y);
+    
+    // Panggil rekursif atas seluruh grid [0,0,GridSize,GridSize]
+    DoBSP_Grid(X, Y, Width, Height, nextID, DistrictIndex);
+}
+
+void ACA_CityLayout::FloorPlanAllDistricts()
+{
+	// Loop through all the districts
+	for (int32 i = 0; i < DistrictArray.Num(); ++i)
+	{
+        UE_LOG(LogTemp, Warning, TEXT("District %d: "), i);
+        UE_LOG(LogTemp, Warning, TEXT("=============="));
+        CurrentDistrict = i;
+		PartitionGridBSP(DistrictArray[i].DistrictCellIndex);
+		
+	}
+    // Print CellCount Variable
+    UE_LOG(LogTemp, Warning, TEXT("CellCount: %d"),CellCount);
+    
+}
+
+void ACA_CityLayout::VisualizeTheBlocks()
+{
+    // Loop through the DistrictArray 
+	for (int32 i = 0; i < DistrictArray.Num(); ++i)
+	{
+		// Loop through the DistrictCellIndex
+		for (int32 j = 0; j < DistrictArray[i].BlockCellArray.Num(); ++j)
+		{
+            FColor Color = FColor::MakeRandomColor();
+            for (int32 k = 0; k < DistrictArray[i].BlockCellArray[j].BlockArray.Num(); ++k) {
+                int32 InstanceIndex = DistrictArray[i].BlockCellArray[j].BlockArray[k];
+                
+
+                ISMBlocks->SetCustomDataValue(InstanceIndex, 0, Color.R);
+                ISMBlocks->SetCustomDataValue(InstanceIndex, 1, Color.G);
+                ISMBlocks->SetCustomDataValue(InstanceIndex, 2, Color.B);
+                ISMBlocks->SetCustomDataValue(InstanceIndex, 3, 1);
+                ISMBlocks->SetCustomDataValue(InstanceIndex, 4, 1);
+            }
+		}
+	}
+}
+
 void ACA_CityLayout::GrowDistricts(TArray<int32>& OutGrid)
 {
     OutGrid = Grid;
@@ -863,44 +920,6 @@ void ACA_CityLayout::GrowDistricts(TArray<int32>& OutGrid)
             if ((DistrictIDs.Num() == 1 && RNG.FRand() < GrowthProb))
             {
                 OutGrid[Index] = DistrictIDs.Array()[0];
-
-				//if (DistrictArray.Num() == 0)
-				//{
-				//	// If the DistrictArray is empty, create a new district
-				//	FDistrictStruct NewDistrict;
-				//	NewDistrict.DistrictID = DistrictIDs.Array()[0];
-    //                NewDistrict.DistrictType = 0;
-				//	NewDistrict.DistrictCellIndex.Add(Index);
-
-				//	DistrictArray.Add(NewDistrict);
-				//}
-    //            else {
-    //                // Check if the DistrictArray have DistrictID same with the DistrictIDs.Array()[0]
-
-				//	bool bFound = false;
-
-    //                for (int32 i = 0; i < DistrictArray.Num(); ++i)
-    //                {
-    //                    if (DistrictArray[i].DistrictID == DistrictIDs.Array()[0])
-    //                    {
-    //                        // Add the index to the DistrictArray
-    //                        DistrictArray[i].DistrictCellIndex.Add(Index);
-				//			bFound = true;
-    //                        break;
-    //                    }
-    //                }
-    //                if (!bFound)
-    //                {
-    //                    // If not found, create a new district
-    //                    FDistrictStruct NewDistrict;
-    //                    NewDistrict.DistrictID = DistrictIDs.Array()[0];
-    //                    NewDistrict.DistrictType = 0;
-    //                    NewDistrict.DistrictCellIndex.Add(Index);
-    //                    DistrictArray.Add(NewDistrict);
-    //                }
-    //            }
-                
-
             }
             else if (DistrictIDs.Num() > 1)
             {
@@ -1030,7 +1049,6 @@ TArray<FIntPoint> ACA_CityLayout::GetMooreNeighborsWithinRadius(int32 StartX, in
     return Neighbors;
 }
 
-
 void ACA_CityLayout::InitializeRoadLayerGridValues()
 {
 	// Initialize the RoadLayerGrid with EMPTY values
@@ -1144,6 +1162,210 @@ void ACA_CityLayout::InitializeSecurityLayerGridValues()
     SecurityLayerGrid.Init(10, GridSize * GridSize);
 }
 
+void ACA_CityLayout::DoBSP_Grid(int32 X, int32 Y, int32 Width, int32 Height, int32& NextID, TArray<int32>& BlockIndex)
+{
+    // Cek apakah region perlu di-split lagi
+    bool canSplitX = Width > maxXSize && Width >= 2 * minXSize;
+    bool canSplitY = Height > maxYSize && Height >= 2 * minYSize;
+
+    TArray<int32> LeftPartition;
+    TArray<int32> RightPartition;
+
+    UE_LOG(LogTemp, Warning, TEXT("==========="));
+	UE_LOG(LogTemp, Warning, TEXT("X: %d"), X);
+    UE_LOG(LogTemp, Warning, TEXT("Y: %d"), Y);
+    UE_LOG(LogTemp, Warning, TEXT("==========="));
+
+
+    if (!canSplitX && !canSplitY)
+    {
+        if (BlockIndex.Num() > 0)
+        {
+            // Buat BlockArrayCell baru dengan ID sekarang
+            FBlockCellStruct NewBlockCell;
+            int32 currentID = NextID++;
+            NewBlockCell.BlockID = currentID;
+            // Loop untuk menambahkan BlockIndex ke dalam NewBlockCell BlockArray
+            for (int32 i = 0; i < BlockIndex.Num(); ++i)
+            {
+                // Print out the BlockIndex[i]
+                UE_LOG(LogTemp, Warning, TEXT("BlockIndex[%d]: %d"), i, BlockIndex[i]);
+
+                NewBlockCell.BlockArray.Add(BlockIndex[i]);
+                CellCount++;
+            }
+            UE_LOG(LogTemp, Warning, TEXT("=========================="));
+            DistrictArray[CurrentDistrict].BlockCellArray.Add(NewBlockCell);
+            
+        }
+        return;
+    }
+
+    // Tentukan orientasi split: berdasarkan ukuran
+    bool splitVert = false;
+    if (canSplitX && canSplitY)
+    {
+        // Pilih berdasarkan sisi terpanjang
+        splitVert = (Width > Height);
+    }
+    else if (canSplitX)
+    {
+        splitVert = true;
+    }
+    // else splitVert tetap false (split horizontal)
+
+    if (splitVert)
+    {
+        // Vertical split: cari splitX di [MinX, W-MinX]
+        int32 SplitAt = FMath::RandRange(minXSize, Width - minXSize);
+
+		UE_LOG(LogTemp, Warning, TEXT("SplitVertAt: %d"), SplitAt);
+
+		
+		// loop to add the partition to the left
+        for (int32 i = 0; i < Height; ++i) {
+            for (int32 j = 0; j < SplitAt; ++j) {
+                if (BlockIndex.Contains((j + X) + ((i + Y) * GridSize)) ) {
+					LeftPartition.Add((j + X) + ((i + Y) * GridSize));
+					UE_LOG(LogTemp, Warning, TEXT("LeftPartition: %d"), (j + X) + ((i + Y) * GridSize));
+                }
+                else {
+					UE_LOG(LogTemp, Warning, TEXT("Else Left"));
+                }
+            }
+        }
+        for (int32 i = 0; i < Height; ++i) {
+            for (int32 j = SplitAt; j < Width; ++j) {
+                if (BlockIndex.Contains((j + X) + ((i + Y) * GridSize))) {
+                    RightPartition.Add((j + X) + ((i + Y) * GridSize));
+					UE_LOG(LogTemp, Warning, TEXT("RightPartition: %d"), (j + X) + ((i + Y) * GridSize));
+                }
+                else {
+                    UE_LOG(LogTemp, Warning, TEXT("Else Right"));
+                }
+            }
+        }
+		X = GetMinX(LeftPartition);
+		Y = GetMinY(LeftPartition);
+
+        // Region kiri
+        if (LeftPartition.Num() > 0)
+            DoBSP_Grid(X, Y, SplitAt, GetMaxHeight(LeftPartition,Y), NextID, LeftPartition);
+        // Region kanan
+
+        //X = GetMinX(RightPartition);
+        Y = GetMinY(RightPartition);
+        if (RightPartition.Num() > 0)
+            DoBSP_Grid(X + SplitAt, Y, Width - SplitAt, GetMaxHeight(RightPartition, Y), NextID, RightPartition);
+    }
+    else
+    {
+        // Horizontal split: cari splitY di [MinY, H-MinY]
+        int32 SplitAt = FMath::RandRange(minYSize, Height - minYSize);
+
+        UE_LOG(LogTemp, Warning, TEXT("SplitHorAt: %d"), SplitAt);
+
+        TArray<int32> LowerPartition;
+        TArray<int32> UpperPartition;
+		// loop to add the Lower partition
+        for (int32 i = 0; i < SplitAt; ++i) {
+            for (int32 j = 0; j < Width; ++j) {
+                if (BlockIndex.Contains((j + X) + ((i + Y) * GridSize))) {
+                    LowerPartition.Add((j + X) + ((i + Y) * GridSize));
+					UE_LOG(LogTemp, Warning, TEXT("LowerPartition: %d"), (j + X) + ((i + Y) * GridSize));
+                }
+                else {
+                    UE_LOG(LogTemp, Warning, TEXT("Else Lower"));
+                }
+            }
+        }
+		// loop to add the Upper partition
+        for (int32 i = SplitAt; i < Height; ++i) {
+            for (int32 j = 0; j < Width; ++j) {
+                if (BlockIndex.Contains((j + X) + ((i + Y) * GridSize))) {
+                    UpperPartition.Add((j + X) + ((i + Y) * GridSize));
+                    UE_LOG(LogTemp, Warning, TEXT("UpperPartition: %d"), (j + X) + ((i + Y) * GridSize));
+                }
+                else {
+                    UE_LOG(LogTemp, Warning, TEXT("Else Upper"));
+                }
+            }
+        }
+        X = GetMinX(UpperPartition);
+        //Y = GetMinY(UpperPartition);
+        // Region atas
+        if (UpperPartition.Num() > 0)
+            DoBSP_Grid(X, Y + SplitAt, GetMaxWidth(UpperPartition,X), Height - SplitAt, NextID, UpperPartition);
+        // Region bawah
+        X = GetMinX(LowerPartition);
+        Y = GetMinY(LowerPartition);
+        if (LowerPartition.Num() > 0)
+            DoBSP_Grid(X, Y, GetMaxWidth(LowerPartition, X), SplitAt, NextID, LowerPartition);
+    }
+}
+
+int32 ACA_CityLayout::GetMaxHeight(TArray<int32>& GridArray, int32 Y)
+{
+	if (GridArray.Num() == 0)
+	{
+		Y = 0;
+        UE_LOG(LogTemp, Warning, TEXT("Array is Empty"));
+		return 0;
+	}
+    Y = GridArray[0] / GridSize;
+	UE_LOG(LogTemp, Warning, TEXT("Y: %d"), Y);
+	UE_LOG(LogTemp, Warning, TEXT("Height: %d"), (GridArray[GridArray.Num() - 1] / GridSize) - (GridArray[0] / GridSize) + 1);
+	return (GridArray.Last()/GridSize) - (GridArray[0]/GridSize) + 1;
+}
+
+int32 ACA_CityLayout::GetMaxWidth(TArray<int32>& GridArray, int32 X)
+{
+    int32 MaxValue = 0;
+	int32 MinValue = 1000000000;
+	for (int32 i = 0; i < GridArray.Num(); i++)
+	{
+		if (GridArray[i] % GridSize > MaxValue)
+		{
+			MaxValue = GridArray[i] % GridSize;
+		}
+		if (GridArray[i] % GridSize < MinValue)
+		{
+			MinValue = GridArray[i] % GridSize;
+		}
+	}
+	X = MinValue;
+	UE_LOG(LogTemp, Warning, TEXT("X: %d"), X);
+	UE_LOG(LogTemp, Warning, TEXT("Width: %d"), MaxValue - MinValue + 1);
+	return MaxValue - MinValue + 1;
+}
+
+int32 ACA_CityLayout::GetMinX(TArray<int32>& GridArray)
+{
+    if (GridArray.Num() == 0)
+    {
+        return 0;
+    }
+    int32 MinValue = 1000000000;
+    for (int32 i = 0; i < GridArray.Num(); i++)
+    {
+        if (GridArray[i] % GridSize < MinValue)
+        {
+            MinValue = GridArray[i] % GridSize;
+        }
+    }
+    MinValue;
+    return MinValue;
+}
+
+int32 ACA_CityLayout::GetMinY(TArray<int32>& GridArray)
+{
+	if (GridArray.Num() == 0)
+	{
+		return 0;
+	}
+    return GridArray[0] / GridSize;
+}
+
 
 
 void ACA_CityLayout::Simulate()
@@ -1201,6 +1423,13 @@ void ACA_CityLayout::VisualizeGrid()
 
             // Add instance
             const int32 InstanceIndex = InstancedGridMesh->AddInstance(InstanceTransform);
+			ISMBlocks->AddInstance(InstanceTransform, true);
+
+			ISMBlocks->SetCustomDataValue(InstanceIndex, 0, 0);
+            ISMBlocks->SetCustomDataValue(InstanceIndex, 1, 0);
+            ISMBlocks->SetCustomDataValue(InstanceIndex, 2, 0);
+            ISMBlocks->SetCustomDataValue(InstanceIndex, 3, 1);
+            ISMBlocks->SetCustomDataValue(InstanceIndex, 4, 0.5);
 
             // If you have a color in DistrictColors, set it
             if (DistrictColors.Contains(CellValue))

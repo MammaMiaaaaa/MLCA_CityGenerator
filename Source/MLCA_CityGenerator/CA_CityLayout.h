@@ -10,6 +10,7 @@
 #include "BuildingTypeEnum.h"
 #include "DistrictStruct.h"
 #include "DistrictTypeEnum.h"
+#include "BlockCellStruct.h"
 #include "CA_CityLayout.generated.h"
 
 
@@ -48,8 +49,23 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
 	float CellSize = 200.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	int32 minXSize = 2;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	int32 minYSize = 2;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	int32 maxXSize = 5;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	int32 maxYSize = 5;
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
     UInstancedStaticMeshComponent* InstancedGridMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
+	UInstancedStaticMeshComponent* ISMBlocks;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Water")
 	int32 WaterSeedAmount = 10;
@@ -168,12 +184,25 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void GetAllDistricts();
 
+	UFUNCTION(BlueprintCallable, Category = "Partition")
+	void PartitionGridBSP(TArray<int32> DistrictIndex);
+
+	UFUNCTION(BlueprintCallable)
+	void FloorPlanAllDistricts();
+
+	UFUNCTION(BlueprintCallable)
+	void VisualizeTheBlocks();
+
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
     FRandomStream RNG;
     TArray<FIntPoint> SeedPositions;
+	int32 minBlockValue;
+	int32 maxBlockValue;
+	int32 CurrentDistrict = 0;
+	int32 CellCount = 0;
 
     int32 GetIndex(int32 X, int32 Y) const;
 
@@ -210,6 +239,16 @@ protected:
 	void InitializeRoadAccessibilityLayerGridValues();
 
 	void InitializeSecurityLayerGridValues();
+
+	void DoBSP_Grid(int32 X, int32 Y, int32 Width, int32 Height, int32& NextID, TArray<int32>& BlockIndex);
+
+	int32 GetMaxHeight(TArray<int32>& GridArray, int32 Y);
+
+	int32 GetMaxWidth(TArray<int32>& GridArray, int32 X);
+
+	int32 GetMinX(TArray<int32>& GridArray);
+
+	int32 GetMinY(TArray<int32>& GridArray);
 
 public:	
 	// Called every frame

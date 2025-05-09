@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "DistrictTypeEnum.h"
+#include "BlockCellStruct.h"
 #include "DistrictStruct.generated.h"
 
 USTRUCT(BlueprintType)
@@ -20,6 +21,10 @@ struct FDistrictStruct
 	TArray<int32> DistrictCellIndex;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "District")
 	TArray<EDistrictTypeEnum> AvailableDistrictType;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "District")
+	TArray<int32> PartitionIDs; // IDs of the partitions building part of this district
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "District")
+	TArray<FBlockCellStruct> BlockCellArray;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "District")
 	float WaterAvailValue = 0.0f;
@@ -35,5 +40,6 @@ struct FDistrictStruct
 	float RoadAccessibilityValue = 0.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "District")
 	float SecurityValue = 0.0f;
+	
 	
 };
