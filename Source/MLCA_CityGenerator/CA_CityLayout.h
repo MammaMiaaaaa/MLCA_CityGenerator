@@ -193,6 +193,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void VisualizeTheBlocks();
 
+	UFUNCTION(BlueprintCallable)
+	void GetAllLargestRectanglesForDistricts();
+
 
 protected:
 	// Called when the game starts or when spawned
@@ -249,6 +252,8 @@ protected:
 	int32 GetMinX(TArray<int32>& GridArray);
 
 	int32 GetMinY(TArray<int32>& GridArray);
+
+	void FindLargestRectangle(TArray<int32>& ComponentIndices,int32& OutSizeX, int32& OutSizeY);
 
 public:	
 	// Called every frame

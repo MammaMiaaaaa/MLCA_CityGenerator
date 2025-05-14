@@ -1086,6 +1086,19 @@ void ACA_CityLayout::InitializeDistrictLayerGridValues()
         }
     }
 }
+void ACA_CityLayout::GetAllLargestRectanglesForDistricts() {
+    // for each loop DistrictArray
+	for (int32 i = 0; i < DistrictArray.Num(); ++i)
+	{
+		// for each loop BlockCellArray
+		for (int32 j = 0; j < DistrictArray[i].BlockCellArray.Num(); ++j)
+		{
+			FindLargestRectangle(DistrictArray[i].BlockCellArray[j].BlockArray, DistrictArray[i].BlockCellArray[j].SizeX, DistrictArray[i].BlockCellArray[j].SizeY);
+
+		}
+	}
+
+}
 
 void ACA_CityLayout::InitializeWaterLayerGridValues()
 {
@@ -1366,8 +1379,6 @@ int32 ACA_CityLayout::GetMinY(TArray<int32>& GridArray)
     return GridArray[0] / GridSize;
 }
 
-
-
 void ACA_CityLayout::Simulate()
 {
     TArray<int32> NewGrid;
@@ -1563,4 +1574,71 @@ void ACA_CityLayout::GetRoadJunctions()
 	//print out the number of junctions
 	UE_LOG(LogTemp, Warning, TEXT("Number of Junctions: %d"), Junctions.Num());
 }
+
+void ACA_CityLayout::FindLargestRectangle(TArray<int32>& ComponentIndices,int32& OutSizeX, int32& OutSizeY)
+{
+    TSet<FIntPoint> PointSet;
+
+    // Konversi index 1D ke FIntPoint
+    for (int32 Index : ComponentIndices)
+    {
+        int32 X = Index % GridSize;
+        int32 Y = Index / GridSize;
+        PointSet.Add(FIntPoint(X, Y));
+    }
+
+    int32 MaxArea = 0;
+    FIntPoint BestTopLeft;
+    int32 BestWidth = 0;
+    int32 BestHeight = 0;
+
+    // Coba semua titik sebagai top-left
+    for (const FIntPoint& TL : PointSet)
+    {
+        // Maksimum lebarnya ditentukan oleh seberapa jauh ke kanan titik 1 masih valid
+        int32 MaxW = 0;
+        while (PointSet.Contains(FIntPoint(TL.X + MaxW, TL.Y))) ++MaxW;
+
+        // Sekarang coba semua tinggi yang mungkin untuk lebar itu
+        int32 MaxH = 0;
+        bool Valid = true;
+        while (Valid)
+        {
+            for (int32 dx = 0; dx < MaxW; ++dx)
+            {
+                if (!PointSet.Contains(FIntPoint(TL.X + dx, TL.Y + MaxH)))
+                {
+                    Valid = false;
+                    break;
+                }
+            }
+            if (Valid) ++MaxH;
+        }
+
+        int32 Area = MaxW * MaxH;
+        if (Area > MaxArea)
+        {
+            MaxArea = Area;
+            BestTopLeft = TL;
+            BestWidth = MaxW;
+            BestHeight = MaxH;
+        }
+    }
+    ComponentIndices.Reset();
+    // Bangun kembali array index 1D dari hasil terbaik
+    if (BestHeight >= minXSize && BestWidth >= minYSize)
+    {
+        for (int32 y = 0; y < BestHeight; ++y)
+        {
+            for (int32 x = 0; x < BestWidth; ++x)
+            {
+                int32 GridIndex = (BestTopLeft.Y + y) * GridSize + (BestTopLeft.X + x);
+                ComponentIndices.Add(GridIndex);
+            }
+        }
+    }
+    OutSizeX = BestWidth;
+    OutSizeY = BestHeight;
+}
+
 

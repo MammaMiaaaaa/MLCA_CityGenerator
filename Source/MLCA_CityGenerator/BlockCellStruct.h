@@ -13,6 +13,10 @@ struct FBlockCellStruct
 	int32 BlockID = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Block")
 	TArray<int32> BlockArray;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Block")
+	int32 SizeX = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Block")
+	int32 SizeY = 0;
 	
 
 };
