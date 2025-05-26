@@ -29,6 +29,7 @@ public:
 	static const int32 RESIDENTIAL = 1;
 	static const int32 COMMERCIAL = 2;
 	static const int32 INDUSTRIAL = 3;
+	static const int32 YARD = 4;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
     int32 GridSize = 100;
@@ -49,23 +50,82 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
 	float CellSize = 200.0f;
 
+	// Residential building size
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
-	int32 minXSize = 2;
+	int32 minXSizeResidental = 5;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
-	int32 minYSize = 2;
+	int32 minYSizeResidental = 5;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
-	int32 maxXSize = 5;
+	int32 maxXSizeResidental = 7;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
-	int32 maxYSize = 5;
+	int32 maxYSizeResidental = 7;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	int32 minHeightResidential = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	int32 maxHeightResidential = 3;
+
+	// Commercial building size
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	int32 minXSizeCommercial = 3;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	int32 minYSizeCommercial = 3;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	int32 maxXSizeCommercial = 5;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	int32 maxYSizeCommercial = 5;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	int32 minHeightCommercial = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	int32 maxHeightCommercial = 4;
+
+
+	// Industrial building size
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	int32 minXSizeIndustrial = 5;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	int32 minYSizeIndustrial = 5;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	int32 maxXSizeIndustrial = 10;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	int32 maxYSizeIndustrial = 10;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	int32 minHeightIndustrial = 3;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	int32 maxHeightIndustrial = 6;
+
+	// Instanced Static Mesh Component for visualization
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
     UInstancedStaticMeshComponent* InstancedGridMesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
 	UInstancedStaticMeshComponent* ISMBlocks;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
+	UInstancedStaticMeshComponent* ISMTree;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
+	UInstancedStaticMeshComponent* ISMTreeV2;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
+	UInstancedStaticMeshComponent* ISMTreeV3;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
+	UInstancedStaticMeshComponent* ISMTile;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Water")
 	int32 WaterSeedAmount = 10;
@@ -88,6 +148,30 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Satisfaction")
 	int32 PoliceStationSpreadDistance = 15;
 
+	// Thresholds for each layer
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Threshold")
+	int32 WaterThreshold = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Threshold")
+	int32 ElectricityThreshold = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Threshold")
+	int32 PopulationSatisfactionThreshold = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Threshold")
+	int32 PolutionThreshold = 100;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Threshold")
+	int32 PopulationDensityThreshold = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Threshold")
+	int32 RoadAccessibilityThreshold = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Threshold")
+	int32 SecurityThreshold = 0;
+
+
+	// Utility
 	UPROPERTY(BlueprintReadOnly)
 	int32 Iterations = 0;
 
@@ -103,6 +187,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool IsMeetAJunction = false;
 
+	// Layers Array
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
     TArray<int32> RoadLayerGrid;
 
@@ -129,6 +214,15 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<int32> SecurityLayerGrid;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<int32> TreeLayerArray;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<int32> TileLayerArray;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<int32> BuildingLayerArray;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FDistrictStruct> DistrictArray;
@@ -185,7 +279,7 @@ public:
 	void GetAllDistricts();
 
 	UFUNCTION(BlueprintCallable, Category = "Partition")
-	void PartitionGridBSP(TArray<int32> DistrictIndex);
+	void PartitionGridBSP(TArray<int32> DistrictIndex, int DistrictType);
 
 	UFUNCTION(BlueprintCallable)
 	void FloorPlanAllDistricts();
@@ -195,6 +289,16 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void GetAllLargestRectanglesForDistricts();
+
+	UFUNCTION(BlueprintCallable)
+	void SetBuildingLayerGridValues();
+
+	UFUNCTION(BlueprintCallable)
+	void SetTreeLayerGridValues();
+
+	UFUNCTION(BlueprintCallable)
+	void SetTileLayerGridValues();
+
 
 
 protected:
@@ -243,7 +347,7 @@ protected:
 
 	void InitializeSecurityLayerGridValues();
 
-	void DoBSP_Grid(int32 X, int32 Y, int32 Width, int32 Height, int32& NextID, TArray<int32>& BlockIndex);
+	void DoBSP_Grid(int32 X, int32 Y, int32 Width, int32 Height, int32& NextID, TArray<int32>& BlockIndex, int DistrictType);
 
 	int32 GetMaxHeight(TArray<int32>& GridArray, int32 Y);
 
@@ -253,7 +357,8 @@ protected:
 
 	int32 GetMinY(TArray<int32>& GridArray);
 
-	void FindLargestRectangle(TArray<int32>& ComponentIndices,int32& OutSizeX, int32& OutSizeY);
+	void FindLargestRectangle(TArray<int32>& ComponentIndices,int32& OutSizeX, int32& OutSizeY, int DistrictType);
+
 
 public:	
 	// Called every frame

@@ -17,6 +17,14 @@ ACA_CityLayout::ACA_CityLayout()
 
 	ISMBlocks = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("ISMBlock"));
 
+	ISMTree = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("ISMTree"));
+
+	ISMTreeV2 = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("ISMTree2"));
+
+	ISMTreeV3 = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("ISMTree3"));
+
+	ISMTile = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("ISMTile"));
+
     // We want 3 floats per instance (R, G, B, A).
     InstancedGridMesh->NumCustomDataFloats = 4;
 	ISMBlocks->NumCustomDataFloats = 4;
@@ -92,7 +100,7 @@ void ACA_CityLayout::PlaceSeeds()
 
     if (SeedPositions.Num() < NumDistricts)
     {
-        UE_LOG(LogTemp, Error, TEXT("Failed to place all district seeds."));
+        //UE_LOG(LogTemp, Error, TEXT("Failed to place all district seeds."));
     }
 }
 
@@ -232,7 +240,7 @@ void ACA_CityLayout::AddRoadsToArray(TArray<int32>& RoadIndexArray, TArray<int32
 {
     if (!InstancedGridMesh)
     {
-        UE_LOG(LogTemp, Warning, TEXT("InstancedGridMesh is null in AddRoadsToArray."));
+        //UE_LOG(LogTemp, Warning, TEXT("InstancedGridMesh is null in AddRoadsToArray."));
         return;
     }
 
@@ -251,7 +259,7 @@ void ACA_CityLayout::AddRoadsToArray(TArray<int32>& RoadIndexArray, TArray<int32
         }
         else
         {
-            UE_LOG(LogTemp, Warning, TEXT("Invalid index %d in RoadIndexArray"), Index);
+            //UE_LOG(LogTemp, Warning, TEXT("Invalid index %d in RoadIndexArray"), Index);
         }
     }
 	// Add the road points to the RoadArray
@@ -586,7 +594,7 @@ void ACA_CityLayout::UpdateISMToSpecificLayer(ELayerEnum LayerEnum)
         }
         break;
     default:
-        UE_LOG(LogTemp, Warning, TEXT("UpdateLayerValues: Unknown LayerEnum value!"));
+        //UE_LOG(LogTemp, Warning, TEXT("UpdateLayerValues: Unknown LayerEnum value!"));
         break;
     }
 }
@@ -728,25 +736,25 @@ void ACA_CityLayout::CalculateDistrictType()
             RoadAccessibilityValue += RoadAccessibilityLayerGrid[DistrictArray[i].DistrictCellIndex[j]];
             SecurityValue += SecurityLayerGrid[DistrictArray[i].DistrictCellIndex[j]];
 
-            if (WaterValue >= MaxValue * 10 / 100) {
+            if (WaterValue >= MaxValue * WaterThreshold / 100) {
                 bIsEnoughWater = true;
             }
-            if (ElectricityValue >= MaxValue * 10 / 100) {
+            if (ElectricityValue >= MaxValue * ElectricityThreshold / 100) {
                 bIsEnoughElectricity = true;
             }
-            if (PopulationSatisfactionValue >= MaxValue * 10 / 100) {
+            if (PopulationSatisfactionValue >= MaxValue * PopulationSatisfactionThreshold / 100) {
                 bIsEnoughPopulationSatisfaction = true;
             }
-            if (PolutionValue < MaxValue * 10 / 100) {
+            if (PolutionValue < MaxValue * PolutionThreshold / 100) {
                 bIsEnoughPolution = true;
             }
-            if (PopulationDensityValue >= MaxValue * 10 / 100) {
+            if (PopulationDensityValue >= MaxValue * PopulationDensityThreshold / 100) {
                 bIsEnoughPopulationDensity = true;
             }
-            if (RoadAccessibilityValue >= MaxValue * 10 / 100) {
+            if (RoadAccessibilityValue >= MaxValue * RoadAccessibilityThreshold / 100) {
                 bIsEnoughRoadAccessibility = true;
             }
-            if (SecurityValue >= MaxValue * 10 / 100) {
+            if (SecurityValue >= MaxValue * SecurityThreshold / 100) {
                 bIsEnoughSecurity = true;
             }
             
@@ -762,29 +770,31 @@ void ACA_CityLayout::CalculateDistrictType()
 
         if (bIsEnoughWater && bIsEnoughElectricity && bIsEnoughPopulationSatisfaction && bIsEnoughPolution && bIsEnoughSecurity)
         {
-            DistrictArray[i].AvailableDistrictType.AddUnique(EDistrictTypeEnum::Residential);
-			// for each DistrictCellIndex set the DistrictLayerGrid to Residential
-			for (int32 j = 0; j < DistrictArray[i].DistrictCellIndex.Num(); ++j)
-			{
-				DistrictLayerGrid[DistrictArray[i].DistrictCellIndex[j]] = RESIDENTIAL;
-			}
+            DistrictArray[i].AvailableDistrictType.AddUnique(RESIDENTIAL);
         }
         if (bIsEnoughWater && bIsEnoughElectricity && bIsEnoughPopulationDensity && bIsEnoughRoadAccessibility && bIsEnoughSecurity)
         {
-            DistrictArray[i].AvailableDistrictType.AddUnique(EDistrictTypeEnum::Commercial);
-            for (int32 j = 0; j < DistrictArray[i].DistrictCellIndex.Num(); ++j)
-            {
-                DistrictLayerGrid[DistrictArray[i].DistrictCellIndex[j]] = COMMERCIAL;
-            }
+            DistrictArray[i].AvailableDistrictType.AddUnique(COMMERCIAL);
         }
         if (bIsEnoughWater && bIsEnoughElectricity && bIsEnoughRoadAccessibility && bIsEnoughPolution)
         {
-            DistrictArray[i].AvailableDistrictType.AddUnique(EDistrictTypeEnum::Industrial);
-            for (int32 j = 0; j < DistrictArray[i].DistrictCellIndex.Num(); ++j)
-            {
-                DistrictLayerGrid[DistrictArray[i].DistrictCellIndex[j]] = INDUSTRIAL;
-            }
+            DistrictArray[i].AvailableDistrictType.AddUnique(INDUSTRIAL);
         }
+		// Randomly assign the DistrictType with AvailableDistrictType
+		if (DistrictArray[i].AvailableDistrictType.Num() > 0)
+		{
+			int32 RandomIndex = FMath::RandRange(0, DistrictArray[i].AvailableDistrictType.Num() - 1);
+			DistrictArray[i].DistrictType = DistrictArray[i].AvailableDistrictType[RandomIndex];
+		}
+		else
+		{
+			DistrictArray[i].DistrictType = 0;
+		}
+		// Set the DistrictLayerGrid to the DistrictType
+		for (int32 j = 0; j < DistrictArray[i].DistrictCellIndex.Num(); ++j)
+		{
+			DistrictLayerGrid[DistrictArray[i].DistrictCellIndex[j]] = DistrictArray[i].DistrictType;
+		}
 	}
 }
 
@@ -838,7 +848,7 @@ void ACA_CityLayout::GetAllDistricts()
     
 }
 
-void ACA_CityLayout::PartitionGridBSP(TArray<int32> DistrictIndex)
+void ACA_CityLayout::PartitionGridBSP(TArray<int32> DistrictIndex, int DistrictType)
 {
     // Siapkan output
     int32 nextID = 0;
@@ -850,7 +860,7 @@ void ACA_CityLayout::PartitionGridBSP(TArray<int32> DistrictIndex)
 	int32 Height = GetMaxHeight(DistrictIndex, Y);
     
     // Panggil rekursif atas seluruh grid [0,0,GridSize,GridSize]
-    DoBSP_Grid(X, Y, Width, Height, nextID, DistrictIndex);
+    DoBSP_Grid(X, Y, Width, Height, nextID, DistrictIndex, DistrictType);
 }
 
 void ACA_CityLayout::FloorPlanAllDistricts()
@@ -858,36 +868,35 @@ void ACA_CityLayout::FloorPlanAllDistricts()
 	// Loop through all the districts
 	for (int32 i = 0; i < DistrictArray.Num(); ++i)
 	{
-        UE_LOG(LogTemp, Warning, TEXT("District %d: "), i);
-        UE_LOG(LogTemp, Warning, TEXT("=============="));
+        //UE_LOG(LogTemp, Warning, TEXT("District %d: "), i);
+        //UE_LOG(LogTemp, Warning, TEXT("=============="));
         CurrentDistrict = i;
-		PartitionGridBSP(DistrictArray[i].DistrictCellIndex);
+		PartitionGridBSP(DistrictArray[i].DistrictCellIndex, DistrictArray[i].DistrictType);
 		
 	}
     // Print CellCount Variable
-    UE_LOG(LogTemp, Warning, TEXT("CellCount: %d"),CellCount);
+    //UE_LOG(LogTemp, Warning, TEXT("CellCount: %d"),CellCount);
     
 }
 
 void ACA_CityLayout::VisualizeTheBlocks()
 {
-    // Loop through the DistrictArray 
-	for (int32 i = 0; i < DistrictArray.Num(); ++i)
+	for (int32 i = 0; i < GridSize; ++i)
 	{
-		// Loop through the DistrictCellIndex
-		for (int32 j = 0; j < DistrictArray[i].BlockCellArray.Num(); ++j)
+		for (int32 j = 0; j < GridSize; ++j)
 		{
-            FColor Color = FColor::MakeRandomColor();
-            for (int32 k = 0; k < DistrictArray[i].BlockCellArray[j].BlockArray.Num(); ++k) {
-                int32 InstanceIndex = DistrictArray[i].BlockCellArray[j].BlockArray[k];
-                
-
-                ISMBlocks->SetCustomDataValue(InstanceIndex, 0, Color.R);
-                ISMBlocks->SetCustomDataValue(InstanceIndex, 1, Color.G);
-                ISMBlocks->SetCustomDataValue(InstanceIndex, 2, Color.B);
-                ISMBlocks->SetCustomDataValue(InstanceIndex, 3, 1);
-                ISMBlocks->SetCustomDataValue(InstanceIndex, 4, 1);
-            }
+			int32 Index = GetIndex(j, i);
+			if (Grid[Index] > 0)
+			{
+				FTransform Transform;
+				InstancedGridMesh->GetInstanceTransform(Index, Transform, true);
+				ISMBlocks->AddInstance(Transform, true);
+				ISMBlocks->SetCustomDataValue(Index, 0, 0);
+				ISMBlocks->SetCustomDataValue(Index, 1, 0);
+				ISMBlocks->SetCustomDataValue(Index, 2, 0);
+				ISMBlocks->SetCustomDataValue(Index, 3, 1);
+				ISMBlocks->SetCustomDataValue(Index, 4, 0.5);
+			}
 		}
 	}
 }
@@ -1086,6 +1095,7 @@ void ACA_CityLayout::InitializeDistrictLayerGridValues()
         }
     }
 }
+
 void ACA_CityLayout::GetAllLargestRectanglesForDistricts() {
     // for each loop DistrictArray
 	for (int32 i = 0; i < DistrictArray.Num(); ++i)
@@ -1093,11 +1103,127 @@ void ACA_CityLayout::GetAllLargestRectanglesForDistricts() {
 		// for each loop BlockCellArray
 		for (int32 j = 0; j < DistrictArray[i].BlockCellArray.Num(); ++j)
 		{
-			FindLargestRectangle(DistrictArray[i].BlockCellArray[j].BlockArray, DistrictArray[i].BlockCellArray[j].SizeX, DistrictArray[i].BlockCellArray[j].SizeY);
+			FindLargestRectangle(DistrictArray[i].BlockCellArray[j].BlockArray, DistrictArray[i].BlockCellArray[j].SizeX, DistrictArray[i].BlockCellArray[j].SizeY, DistrictArray[i].DistrictType);
 
 		}
 	}
 
+}
+
+void ACA_CityLayout::SetBuildingLayerGridValues()
+{
+	BuildingLayerArray.Init(0, GridSize * GridSize);
+	for (FDistrictStruct& District : DistrictArray)
+	{
+		for (FBlockCellStruct& BlockCell : District.BlockCellArray)
+		{
+            // Get Building Edge Cell
+			if (BlockCell.BlockArray.Num() == 0) continue;
+			int32 MinRow = BlockCell.BlockArray[0] / GridSize;
+			int32 MinCol = BlockCell.BlockArray[0] % GridSize;
+			int32 MaxRow = BlockCell.BlockArray.Last() / GridSize;
+			int32 MaxCol = BlockCell.BlockArray.Last() % GridSize;
+			for (int32 BlockIndex : BlockCell.BlockArray)
+			{
+				// Set the BuildingLayerGrid to the BlockIndex
+				BuildingLayerArray[BlockIndex] = District.DistrictType;
+                if (District.DistrictType == RESIDENTIAL)
+                {
+					// BlockIndex is in the same row or column as the edge cells
+                    //if (BlockIndex / GridSize == MinRow || BlockIndex / GridSize == MaxRow || BlockIndex % GridSize == MinCol || BlockIndex % GridSize == MaxCol) {
+                        // Set the TileLayerArray to YARD
+						TileLayerArray[BlockIndex] = YARD;
+						FTransform InstanceTransform;
+                        InstancedGridMesh->GetInstanceTransform(BlockIndex, InstanceTransform, true);
+						InstanceTransform.AddToTranslation(FVector(0, 0, 15)); // Adjust height for visibility
+						ISMTile->AddInstance(InstanceTransform, true);
+                    //}
+					// Print the BlockIndex and the DistrictType
+						UE_LOG(LogTemp, Warning, TEXT("BlockIndex: %d, DistrictType: %d"), BlockIndex, District.DistrictType);
+                }
+			}
+		}
+	}
+}
+
+void ACA_CityLayout::SetTreeLayerGridValues()
+{
+	int32 Index = 0;
+	int32 Counter = 0;
+	// for each loop Grid
+    for (int32 GridIndex : Grid)
+    {
+        if (GridIndex > 0 && FMath::RandRange(1, 10) > 9)
+        {
+			TreeLayerArray.Add(Index);
+        }
+		Index++;
+        
+		
+    }
+	// for each loop DistrictArray
+	for (FDistrictStruct& District : DistrictArray)
+	{
+		for (FBlockCellStruct BlockCell: District.BlockCellArray)
+		{
+			for (int32 BlockIndex : BlockCell.BlockArray)
+			{
+				TreeLayerArray.Remove(BlockIndex);
+			}
+		}
+	}
+	// Get transform from InstancedGridMesh
+	for (int32 TreeIndex : TreeLayerArray)
+	{
+		FTransform InstanceTransform;
+		// Get the transform from the InstancedGridMesh
+		InstancedGridMesh->GetInstanceTransform(TreeIndex, InstanceTransform, true);
+        
+        // Add Random Vector to InstanceTransform Location
+		float OffsetAmount = static_cast<float>(GridSize) / 2.0f;
+        FVector RandomOffset = FVector(FMath::RandRange(-OffsetAmount, OffsetAmount), FMath::RandRange(-OffsetAmount, OffsetAmount), 0.0f);
+		InstanceTransform.AddToTranslation(RandomOffset);
+
+        // Randomize the InstanceStaticMesh Variant
+		int32 RandomVariant = FMath::RandRange(0, 2);
+		switch (RandomVariant)
+		{
+		case 0:
+            ISMTree->AddInstance(InstanceTransform, true);
+			break;
+		case 1:
+			ISMTreeV2->AddInstance(InstanceTransform, true);
+			break;
+		case 2:
+			ISMTreeV3->AddInstance(InstanceTransform, true);
+			break;
+		default:
+			ISMTree->AddInstance(InstanceTransform, true);
+			break;
+		}
+		
+		
+	}
+}
+
+void ACA_CityLayout::SetTileLayerGridValues()
+{
+	// Initialize the TileLayerGrid with EMPTY values
+	TileLayerArray.Init(EMPTY, GridSize * GridSize);
+	// Set the TileLayerGrid to the same values as the main grid
+	/*for (int32 y = 0; y < GridSize; ++y)
+	{
+		for (int32 x = 0; x < GridSize; ++x)
+		{
+			int32 Index = GetIndex(x, y);
+			if (Grid[Index] > 0) {
+                TileLayerArray[Index] = Grid[Index];
+			}
+			else if (Grid[Index] == ROAD) {
+                TileLayerArray[Index] = ROAD;
+			}
+		}
+	}*/
 }
 
 void ACA_CityLayout::InitializeWaterLayerGridValues()
@@ -1141,7 +1267,7 @@ void ACA_CityLayout::InitializeWaterLayerGridValues()
 
     if (SeedPositions.Num() < NumDistricts)
     {
-        UE_LOG(LogTemp, Error, TEXT("Failed to place all district seeds."));
+        //UE_LOG(LogTemp, Error, TEXT("Failed to place all district seeds."));
     }
 }
 
@@ -1175,8 +1301,41 @@ void ACA_CityLayout::InitializeSecurityLayerGridValues()
     SecurityLayerGrid.Init(10, GridSize * GridSize);
 }
 
-void ACA_CityLayout::DoBSP_Grid(int32 X, int32 Y, int32 Width, int32 Height, int32& NextID, TArray<int32>& BlockIndex)
+void ACA_CityLayout::DoBSP_Grid(int32 X, int32 Y, int32 Width, int32 Height, int32& NextID, TArray<int32>& BlockIndex, int DistrictType)
 {
+	// Tentukan ukuran minimum untuk split
+	int32 minXSize = 2;
+	int32 minYSize = 2;
+	int32 maxXSize = 10;
+	int32 maxYSize = 10;
+    switch (DistrictType)
+    {
+    case 0:
+        minXSize = 2;
+        minYSize = 2;
+        maxXSize = 10;
+        maxYSize = 10;
+        break;
+    case 1:
+        minXSize = minXSizeResidental;
+        minYSize = minYSizeResidental;
+        maxXSize = maxXSizeResidental;
+        maxYSize = maxYSizeResidental;
+        break;
+    case 2:
+        minXSize = minXSizeCommercial;
+        minYSize = minYSizeCommercial;
+        maxXSize = maxXSizeCommercial;
+        maxYSize = maxYSizeCommercial;
+        break;
+    case 3:
+        minXSize = minXSizeIndustrial;
+        minYSize = minYSizeIndustrial;
+        maxXSize = maxXSizeIndustrial;
+        maxYSize = maxYSizeIndustrial;
+        break;
+    }
+        
     // Cek apakah region perlu di-split lagi
     bool canSplitX = Width > maxXSize && Width >= 2 * minXSize;
     bool canSplitY = Height > maxYSize && Height >= 2 * minYSize;
@@ -1184,10 +1343,10 @@ void ACA_CityLayout::DoBSP_Grid(int32 X, int32 Y, int32 Width, int32 Height, int
     TArray<int32> LeftPartition;
     TArray<int32> RightPartition;
 
-    UE_LOG(LogTemp, Warning, TEXT("==========="));
+    /*UE_LOG(LogTemp, Warning, TEXT("==========="));
 	UE_LOG(LogTemp, Warning, TEXT("X: %d"), X);
     UE_LOG(LogTemp, Warning, TEXT("Y: %d"), Y);
-    UE_LOG(LogTemp, Warning, TEXT("==========="));
+    UE_LOG(LogTemp, Warning, TEXT("==========="));*/
 
 
     if (!canSplitX && !canSplitY)
@@ -1202,12 +1361,12 @@ void ACA_CityLayout::DoBSP_Grid(int32 X, int32 Y, int32 Width, int32 Height, int
             for (int32 i = 0; i < BlockIndex.Num(); ++i)
             {
                 // Print out the BlockIndex[i]
-                UE_LOG(LogTemp, Warning, TEXT("BlockIndex[%d]: %d"), i, BlockIndex[i]);
+                //UE_LOG(LogTemp, Warning, TEXT("BlockIndex[%d]: %d"), i, BlockIndex[i]);
 
                 NewBlockCell.BlockArray.Add(BlockIndex[i]);
                 CellCount++;
             }
-            UE_LOG(LogTemp, Warning, TEXT("=========================="));
+            //UE_LOG(LogTemp, Warning, TEXT("=========================="));
             DistrictArray[CurrentDistrict].BlockCellArray.Add(NewBlockCell);
             
         }
@@ -1232,7 +1391,7 @@ void ACA_CityLayout::DoBSP_Grid(int32 X, int32 Y, int32 Width, int32 Height, int
         // Vertical split: cari splitX di [MinX, W-MinX]
         int32 SplitAt = FMath::RandRange(minXSize, Width - minXSize);
 
-		UE_LOG(LogTemp, Warning, TEXT("SplitVertAt: %d"), SplitAt);
+		//UE_LOG(LogTemp, Warning, TEXT("SplitVertAt: %d"), SplitAt);
 
 		
 		// loop to add the partition to the left
@@ -1240,10 +1399,10 @@ void ACA_CityLayout::DoBSP_Grid(int32 X, int32 Y, int32 Width, int32 Height, int
             for (int32 j = 0; j < SplitAt; ++j) {
                 if (BlockIndex.Contains((j + X) + ((i + Y) * GridSize)) ) {
 					LeftPartition.Add((j + X) + ((i + Y) * GridSize));
-					UE_LOG(LogTemp, Warning, TEXT("LeftPartition: %d"), (j + X) + ((i + Y) * GridSize));
+					//UE_LOG(LogTemp, Warning, TEXT("LeftPartition: %d"), (j + X) + ((i + Y) * GridSize));
                 }
                 else {
-					UE_LOG(LogTemp, Warning, TEXT("Else Left"));
+					//UE_LOG(LogTemp, Warning, TEXT("Else Left"));
                 }
             }
         }
@@ -1251,10 +1410,10 @@ void ACA_CityLayout::DoBSP_Grid(int32 X, int32 Y, int32 Width, int32 Height, int
             for (int32 j = SplitAt; j < Width; ++j) {
                 if (BlockIndex.Contains((j + X) + ((i + Y) * GridSize))) {
                     RightPartition.Add((j + X) + ((i + Y) * GridSize));
-					UE_LOG(LogTemp, Warning, TEXT("RightPartition: %d"), (j + X) + ((i + Y) * GridSize));
+					//UE_LOG(LogTemp, Warning, TEXT("RightPartition: %d"), (j + X) + ((i + Y) * GridSize));
                 }
                 else {
-                    UE_LOG(LogTemp, Warning, TEXT("Else Right"));
+                    //UE_LOG(LogTemp, Warning, TEXT("Else Right"));
                 }
             }
         }
@@ -1263,20 +1422,20 @@ void ACA_CityLayout::DoBSP_Grid(int32 X, int32 Y, int32 Width, int32 Height, int
 
         // Region kiri
         if (LeftPartition.Num() > 0)
-            DoBSP_Grid(X, Y, SplitAt, GetMaxHeight(LeftPartition,Y), NextID, LeftPartition);
+            DoBSP_Grid(X, Y, SplitAt, GetMaxHeight(LeftPartition,Y), NextID, LeftPartition, DistrictType);
         // Region kanan
 
         //X = GetMinX(RightPartition);
         Y = GetMinY(RightPartition);
         if (RightPartition.Num() > 0)
-            DoBSP_Grid(X + SplitAt, Y, Width - SplitAt, GetMaxHeight(RightPartition, Y), NextID, RightPartition);
+            DoBSP_Grid(X + SplitAt, Y, Width - SplitAt, GetMaxHeight(RightPartition, Y), NextID, RightPartition, DistrictType);
     }
     else
     {
         // Horizontal split: cari splitY di [MinY, H-MinY]
         int32 SplitAt = FMath::RandRange(minYSize, Height - minYSize);
 
-        UE_LOG(LogTemp, Warning, TEXT("SplitHorAt: %d"), SplitAt);
+        //UE_LOG(LogTemp, Warning, TEXT("SplitHorAt: %d"), SplitAt);
 
         TArray<int32> LowerPartition;
         TArray<int32> UpperPartition;
@@ -1285,10 +1444,10 @@ void ACA_CityLayout::DoBSP_Grid(int32 X, int32 Y, int32 Width, int32 Height, int
             for (int32 j = 0; j < Width; ++j) {
                 if (BlockIndex.Contains((j + X) + ((i + Y) * GridSize))) {
                     LowerPartition.Add((j + X) + ((i + Y) * GridSize));
-					UE_LOG(LogTemp, Warning, TEXT("LowerPartition: %d"), (j + X) + ((i + Y) * GridSize));
+					//UE_LOG(LogTemp, Warning, TEXT("LowerPartition: %d"), (j + X) + ((i + Y) * GridSize));
                 }
                 else {
-                    UE_LOG(LogTemp, Warning, TEXT("Else Lower"));
+                    //UE_LOG(LogTemp, Warning, TEXT("Else Lower"));
                 }
             }
         }
@@ -1297,10 +1456,10 @@ void ACA_CityLayout::DoBSP_Grid(int32 X, int32 Y, int32 Width, int32 Height, int
             for (int32 j = 0; j < Width; ++j) {
                 if (BlockIndex.Contains((j + X) + ((i + Y) * GridSize))) {
                     UpperPartition.Add((j + X) + ((i + Y) * GridSize));
-                    UE_LOG(LogTemp, Warning, TEXT("UpperPartition: %d"), (j + X) + ((i + Y) * GridSize));
+                    //UE_LOG(LogTemp, Warning, TEXT("UpperPartition: %d"), (j + X) + ((i + Y) * GridSize));
                 }
                 else {
-                    UE_LOG(LogTemp, Warning, TEXT("Else Upper"));
+                    //UE_LOG(LogTemp, Warning, TEXT("Else Upper"));
                 }
             }
         }
@@ -1308,12 +1467,12 @@ void ACA_CityLayout::DoBSP_Grid(int32 X, int32 Y, int32 Width, int32 Height, int
         //Y = GetMinY(UpperPartition);
         // Region atas
         if (UpperPartition.Num() > 0)
-            DoBSP_Grid(X, Y + SplitAt, GetMaxWidth(UpperPartition,X), Height - SplitAt, NextID, UpperPartition);
+            DoBSP_Grid(X, Y + SplitAt, GetMaxWidth(UpperPartition,X), Height - SplitAt, NextID, UpperPartition, DistrictType);
         // Region bawah
         X = GetMinX(LowerPartition);
         Y = GetMinY(LowerPartition);
         if (LowerPartition.Num() > 0)
-            DoBSP_Grid(X, Y, GetMaxWidth(LowerPartition, X), SplitAt, NextID, LowerPartition);
+            DoBSP_Grid(X, Y, GetMaxWidth(LowerPartition, X), SplitAt, NextID, LowerPartition, DistrictType);
     }
 }
 
@@ -1322,12 +1481,12 @@ int32 ACA_CityLayout::GetMaxHeight(TArray<int32>& GridArray, int32 Y)
 	if (GridArray.Num() == 0)
 	{
 		Y = 0;
-        UE_LOG(LogTemp, Warning, TEXT("Array is Empty"));
+        //UE_LOG(LogTemp, Warning, TEXT("Array is Empty"));
 		return 0;
 	}
     Y = GridArray[0] / GridSize;
-	UE_LOG(LogTemp, Warning, TEXT("Y: %d"), Y);
-	UE_LOG(LogTemp, Warning, TEXT("Height: %d"), (GridArray[GridArray.Num() - 1] / GridSize) - (GridArray[0] / GridSize) + 1);
+	//UE_LOG(LogTemp, Warning, TEXT("Y: %d"), Y);
+	//UE_LOG(LogTemp, Warning, TEXT("Height: %d"), (GridArray[GridArray.Num() - 1] / GridSize) - (GridArray[0] / GridSize) + 1);
 	return (GridArray.Last()/GridSize) - (GridArray[0]/GridSize) + 1;
 }
 
@@ -1347,8 +1506,8 @@ int32 ACA_CityLayout::GetMaxWidth(TArray<int32>& GridArray, int32 X)
 		}
 	}
 	X = MinValue;
-	UE_LOG(LogTemp, Warning, TEXT("X: %d"), X);
-	UE_LOG(LogTemp, Warning, TEXT("Width: %d"), MaxValue - MinValue + 1);
+	//UE_LOG(LogTemp, Warning, TEXT("X: %d"), X);
+	//UE_LOG(LogTemp, Warning, TEXT("Width: %d"), MaxValue - MinValue + 1);
 	return MaxValue - MinValue + 1;
 }
 
@@ -1390,7 +1549,7 @@ void ACA_CityLayout::Simulate()
 			SameCount++;
         if (SameCount > 10) {
             // Print out the number of iterations
-            UE_LOG(LogTemp, Warning, TEXT("City Layout Simulation Iterations: %d"), Iterations);
+            //UE_LOG(LogTemp, Warning, TEXT("City Layout Simulation Iterations: %d"), Iterations);
             break;
         }
         Grid = NewGrid;
@@ -1434,13 +1593,13 @@ void ACA_CityLayout::VisualizeGrid()
 
             // Add instance
             const int32 InstanceIndex = InstancedGridMesh->AddInstance(InstanceTransform);
-			ISMBlocks->AddInstance(InstanceTransform, true);
+			/*ISMBlocks->AddInstance(InstanceTransform);
 
 			ISMBlocks->SetCustomDataValue(InstanceIndex, 0, 0);
             ISMBlocks->SetCustomDataValue(InstanceIndex, 1, 0);
             ISMBlocks->SetCustomDataValue(InstanceIndex, 2, 0);
             ISMBlocks->SetCustomDataValue(InstanceIndex, 3, 1);
-            ISMBlocks->SetCustomDataValue(InstanceIndex, 4, 0.5);
+            ISMBlocks->SetCustomDataValue(InstanceIndex, 4, 0.5);*/
 
             // If you have a color in DistrictColors, set it
             if (DistrictColors.Contains(CellValue))
@@ -1572,11 +1731,42 @@ void ACA_CityLayout::GetRoadJunctions()
         InstancedGridMesh->SetCustomDataValue(Index, 4, 0.5);
 	}
 	//print out the number of junctions
-	UE_LOG(LogTemp, Warning, TEXT("Number of Junctions: %d"), Junctions.Num());
+	//UE_LOG(LogTemp, Warning, TEXT("Number of Junctions: %d"), Junctions.Num());
 }
 
-void ACA_CityLayout::FindLargestRectangle(TArray<int32>& ComponentIndices,int32& OutSizeX, int32& OutSizeY)
+void ACA_CityLayout::FindLargestRectangle(TArray<int32>& ComponentIndices,int32& OutSizeX, int32& OutSizeY, int DistrictType)
 {
+    int32 minXSize;
+    int32 minYSize;
+    int32 maxXSize;
+    int32 maxYSize;
+    switch (DistrictType)
+    {
+    case 0:
+        minXSize = 2;
+        minYSize = 2;
+        maxXSize = 10;
+        maxYSize = 10;
+        break;
+    case 1:
+        minXSize = minXSizeResidental;
+        minYSize = minYSizeResidental;
+        maxXSize = maxXSizeResidental;
+        maxYSize = maxYSizeResidental;
+        break;
+    case 2:
+        minXSize = minXSizeCommercial;
+        minYSize = minYSizeCommercial;
+        maxXSize = maxXSizeCommercial;
+        maxYSize = maxYSizeCommercial;
+        break;
+    case 3:
+        minXSize = minXSizeIndustrial;
+        minYSize = minYSizeIndustrial;
+        maxXSize = maxXSizeIndustrial;
+        maxYSize = maxYSizeIndustrial;
+        break;
+    }
     TSet<FIntPoint> PointSet;
 
     // Konversi index 1D ke FIntPoint
