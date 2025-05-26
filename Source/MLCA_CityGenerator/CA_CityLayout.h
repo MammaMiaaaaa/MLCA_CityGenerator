@@ -127,6 +127,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
 	UInstancedStaticMeshComponent* ISMTile;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
+	UInstancedStaticMeshComponent* ISMGrass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
+	UInstancedStaticMeshComponent* ISMGrassV2;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
+	UInstancedStaticMeshComponent* ISMBush;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Water")
 	int32 WaterSeedAmount = 10;
 
@@ -176,9 +185,6 @@ public:
 	int32 Iterations = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<int32> Grid;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FRoadStruct> RoadArray;
 
 	UPROPERTY(EditAnywhere)
@@ -186,6 +192,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool IsMeetAJunction = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<int32> Grid;
 
 	// Layers Array
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -297,7 +306,10 @@ public:
 	void SetTreeLayerGridValues();
 
 	UFUNCTION(BlueprintCallable)
-	void SetTileLayerGridValues();
+	void CalculateTileLayerGridValues();
+
+	UFUNCTION(BlueprintCallable)
+	void AddRoadWidth();
 
 
 
@@ -328,6 +340,8 @@ protected:
 	TArray<FIntPoint> GetVonNeumannNeighborsWithinRadius(int32 StartX, int32 StartY, int32 Radius) const;
 
 	TArray<FIntPoint> GetMooreNeighborsWithinRadius(int32 StartX, int32 StartY, int32 Radius) const;
+
+	bool HasNeighboringRoad(int32 StartX, int32 StartY, int32 Radius) const;
 
 	void InitializeRoadLayerGridValues();
 

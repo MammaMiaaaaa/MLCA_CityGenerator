@@ -25,9 +25,16 @@ ACA_CityLayout::ACA_CityLayout()
 
 	ISMTile = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("ISMTile"));
 
+	ISMGrass = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("ISMGrass"));
+
+	ISMGrassV2 = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("ISMGrass2"));
+
+	ISMBush = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("ISMBush"));
+
     // We want 3 floats per instance (R, G, B, A).
     InstancedGridMesh->NumCustomDataFloats = 4;
 	ISMBlocks->NumCustomDataFloats = 4;
+	ISMTile->NumCustomDataFloats = 1;
 
 }
 
@@ -1058,6 +1065,26 @@ TArray<FIntPoint> ACA_CityLayout::GetMooreNeighborsWithinRadius(int32 StartX, in
     return Neighbors;
 }
 
+bool ACA_CityLayout::HasNeighboringRoad(int32 StartX, int32 StartY, int32 Radius) const
+{
+    // Loop untuk seluruh offset (dx, dy) dalam radius MaxDistance
+    for (int32 x = StartX - Radius; x <= StartX + Radius; ++x)
+    {
+        for (int32 y = StartY - Radius; y <= StartY + Radius; ++y)
+        {
+            // Cek apakah di dalam grid dan bukan titik asal
+            if (IsInBounds(x, y) && !(x == StartX && y == StartY))
+            {
+				if (Grid[GetIndex(x, y)] == ROAD)
+				{
+					return true; // Ada jalan di sekitar titik ini
+				}
+            }
+        }
+    }
+    return false;
+}
+
 void ACA_CityLayout::InitializeRoadLayerGridValues()
 {
 	// Initialize the RoadLayerGrid with EMPTY values
@@ -1136,7 +1163,7 @@ void ACA_CityLayout::SetBuildingLayerGridValues()
 						FTransform InstanceTransform;
                         InstancedGridMesh->GetInstanceTransform(BlockIndex, InstanceTransform, true);
 						InstanceTransform.AddToTranslation(FVector(0, 0, 15)); // Adjust height for visibility
-						ISMTile->AddInstance(InstanceTransform, true);
+						//ISMTile->AddInstance(InstanceTransform, true);
                     //}
 					// Print the BlockIndex and the DistrictType
 						UE_LOG(LogTemp, Warning, TEXT("BlockIndex: %d, DistrictType: %d"), BlockIndex, District.DistrictType);
@@ -1148,10 +1175,11 @@ void ACA_CityLayout::SetBuildingLayerGridValues()
 
 void ACA_CityLayout::SetTreeLayerGridValues()
 {
+	TreeLayerArray.Init(0, GridSize * GridSize);
 	int32 Index = 0;
 	int32 Counter = 0;
 	// for each loop Grid
-    for (int32 GridIndex : Grid)
+    /*for (int32 GridIndex : Grid)
     {
         if (GridIndex > 0 && FMath::RandRange(1, 10) > 9)
         {
@@ -1160,7 +1188,7 @@ void ACA_CityLayout::SetTreeLayerGridValues()
 		Index++;
         
 		
-    }
+    }*/
 	// for each loop DistrictArray
 	for (FDistrictStruct& District : DistrictArray)
 	{
@@ -1168,12 +1196,13 @@ void ACA_CityLayout::SetTreeLayerGridValues()
 		{
 			for (int32 BlockIndex : BlockCell.BlockArray)
 			{
-				TreeLayerArray.Remove(BlockIndex);
+                TreeLayerArray[BlockIndex] = -1;
 			}
 		}
 	}
 	// Get transform from InstancedGridMesh
-	for (int32 TreeIndex : TreeLayerArray)
+
+	for (int32 TreeIndex = 0; TreeIndex < GridSize * GridSize; ++TreeIndex)
 	{
 		FTransform InstanceTransform;
 		// Get the transform from the InstancedGridMesh
@@ -1183,47 +1212,99 @@ void ACA_CityLayout::SetTreeLayerGridValues()
 		float OffsetAmount = static_cast<float>(GridSize) / 2.0f;
         FVector RandomOffset = FVector(FMath::RandRange(-OffsetAmount, OffsetAmount), FMath::RandRange(-OffsetAmount, OffsetAmount), 0.0f);
 		InstanceTransform.AddToTranslation(RandomOffset);
+		InstanceTransform.SetRotation(FQuat::MakeFromEuler(FVector(0, 0, FMath::RandRange(0, 360)))); // Random rotation around Z-axis
 
+        if (Grid[TreeIndex] < 0)
+			TreeLayerArray[TreeIndex] = -1; // Skip if not valid for tree placement
+
+		if (DistrictLayerGrid[TreeIndex] != RESIDENTIAL)
+			TreeLayerArray[TreeIndex] = -1; // Skip if not valid for tree placement
+
+		if (TreeLayerArray[TreeIndex] == -1) continue; // Skip if not valid for tree placement
         // Randomize the InstanceStaticMesh Variant
-		int32 RandomVariant = FMath::RandRange(0, 2);
-		switch (RandomVariant)
-		{
-		case 0:
-            ISMTree->AddInstance(InstanceTransform, true);
-			break;
-		case 1:
-			ISMTreeV2->AddInstance(InstanceTransform, true);
-			break;
-		case 2:
-			ISMTreeV3->AddInstance(InstanceTransform, true);
-			break;
-		default:
+		int32 RandomVariant = FMath::RandRange(0, 100);
+        if (RandomVariant < 5) {
+			TreeLayerArray[TreeIndex] = 1; // 5% chance for ISMTree
 			ISMTree->AddInstance(InstanceTransform, true);
-			break;
 		}
+		else if (RandomVariant < 10) {
+            TreeLayerArray[TreeIndex] = 2; // 5% chance for ISMTreeV2
+			ISMTreeV2->AddInstance(InstanceTransform, true);
+		}
+		else if (RandomVariant < 15) {
+            TreeLayerArray[TreeIndex] = 3; // 5% chance for ISMTreeV3
+			ISMTreeV3->AddInstance(InstanceTransform, true);
+		}
+        else if (RandomVariant < 35) {
+            TreeLayerArray[TreeIndex] = 4; // 20% chance for ISMGrass
+			int32 RandomHeight = FMath::RandRange(0, 30);
+			InstanceTransform.AddToTranslation(FVector(0, 0, RandomHeight)); // Adjust height for visibility
+			ISMGrass->AddInstance(InstanceTransform, true);
+        }
+        else if (RandomVariant < 55) {
+            TreeLayerArray[TreeIndex] = 5; // 20% chance for ISMGrassV1
+			float RandomSize = FMath::RandRange(1.5f, 2.5f);
+			InstanceTransform.SetScale3D(FVector(RandomSize, RandomSize, RandomSize)); // Random scale for grass
+			ISMGrassV2->AddInstance(InstanceTransform, true);
+        }
+        else if (RandomVariant < 65) {
+            TreeLayerArray[TreeIndex] = 6; // 10% chance for ISMGrassV2
+			ISMBush->AddInstance(InstanceTransform, true);
+        }
+        
+		
 		
 		
 	}
 }
 
-void ACA_CityLayout::SetTileLayerGridValues()
+void ACA_CityLayout::CalculateTileLayerGridValues()
 {
 	// Initialize the TileLayerGrid with EMPTY values
 	TileLayerArray.Init(EMPTY, GridSize * GridSize);
 	// Set the TileLayerGrid to the same values as the main grid
-	/*for (int32 y = 0; y < GridSize; ++y)
+	for (int32 y = 0; y < GridSize; ++y)
+	{
+		for (int32 x = 0; x < GridSize; ++x)
+		{
+            int32 Index = GetIndex(x, y);
+            FTransform InstanceTransform;
+            InstancedGridMesh->GetInstanceTransform(Index, InstanceTransform, true);
+            int32 ISMIndex = ISMTile->AddInstance(InstanceTransform, true);
+			
+			//if (Grid[Index] > 0) {
+   //             TileLayerArray[Index] = Grid[Index];
+   //             ISMTile->SetCustomDataValue(ISMIndex, 0, 1);
+			//	//ISMTile->SetCustomPrimitiveDataFloat(Index, 0, 1.0f); // Set the custom primitive data to 1.0f for visibility
+			//}
+			//else if (Grid[Index] == ROAD) {
+   //             TileLayerArray[Index] = ROAD;
+			//	ISMTile->SetCustomDataValue(ISMIndex, 0, 0);
+			//}
+
+            ISMTile->SetCustomDataValue(ISMIndex, 0, DistrictLayerGrid[Index]);
+			
+		}
+	}
+}
+
+void ACA_CityLayout::AddRoadWidth()
+{
+	TArray<int32> GridCopy = Grid;
+	// Loop through the RoadLayerGrid and set the RoadWidth to 1
+	for (int32 y = 0; y < GridSize; ++y)
 	{
 		for (int32 x = 0; x < GridSize; ++x)
 		{
 			int32 Index = GetIndex(x, y);
-			if (Grid[Index] > 0) {
-                TileLayerArray[Index] = Grid[Index];
+			if (HasNeighboringRoad(x, y, 1))
+			{
+				GridCopy[Index] = ROAD;
 			}
-			else if (Grid[Index] == ROAD) {
-                TileLayerArray[Index] = ROAD;
-			}
+			
 		}
-	}*/
+	}
+	Grid = GridCopy;
 }
 
 void ACA_CityLayout::InitializeWaterLayerGridValues()
