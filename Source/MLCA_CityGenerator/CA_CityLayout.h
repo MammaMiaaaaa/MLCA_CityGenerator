@@ -91,10 +91,10 @@ public:
 
 	// Industrial building size
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
-	int32 minXSizeIndustrial = 3;
+	int32 minXSizeIndustrial = 6;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
-	int32 minYSizeIndustrial = 3;
+	int32 minYSizeIndustrial = 6;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
 	int32 maxXSizeIndustrial = 10;
@@ -106,7 +106,7 @@ public:
 	int32 minHeightIndustrial = 3;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
-	int32 maxHeightIndustrial = 6;
+	int32 maxHeightIndustrial = 5;
 
 	// Instanced Static Mesh Component for visualization
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
