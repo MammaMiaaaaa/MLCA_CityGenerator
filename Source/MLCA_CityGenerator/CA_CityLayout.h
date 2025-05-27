@@ -91,10 +91,10 @@ public:
 
 	// Industrial building size
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
-	int32 minXSizeIndustrial = 5;
+	int32 minXSizeIndustrial = 3;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
-	int32 minYSizeIndustrial = 5;
+	int32 minYSizeIndustrial = 3;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
 	int32 maxXSizeIndustrial = 10;

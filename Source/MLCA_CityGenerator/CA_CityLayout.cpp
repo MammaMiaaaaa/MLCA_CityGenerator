@@ -1242,13 +1242,13 @@ void ACA_CityLayout::SetTreeLayerGridValues()
 			ISMGrass->AddInstance(InstanceTransform, true);
         }
         else if (RandomVariant < 55) {
-            TreeLayerArray[TreeIndex] = 5; // 20% chance for ISMGrassV1
+            TreeLayerArray[TreeIndex] = 5; // 20% chance for ISMGrassV2
 			float RandomSize = FMath::RandRange(1.5f, 2.5f);
 			InstanceTransform.SetScale3D(FVector(RandomSize, RandomSize, RandomSize)); // Random scale for grass
 			ISMGrassV2->AddInstance(InstanceTransform, true);
         }
         else if (RandomVariant < 65) {
-            TreeLayerArray[TreeIndex] = 6; // 10% chance for ISMGrassV2
+            TreeLayerArray[TreeIndex] = 6; // 10% chance for ISMBush
 			ISMBush->AddInstance(InstanceTransform, true);
         }
         
