@@ -34,7 +34,7 @@ ACA_CityLayout::ACA_CityLayout()
     // We want 3 floats per instance (R, G, B, A).
     InstancedGridMesh->NumCustomDataFloats = 4;
 	ISMBlocks->NumCustomDataFloats = 4;
-	ISMTile->NumCustomDataFloats = 1;
+	ISMTile->NumCustomDataFloats = 2;
 
 }
 
@@ -1307,6 +1307,24 @@ void ACA_CityLayout::AddRoadWidth()
 	Grid = GridCopy;
 }
 
+void ACA_CityLayout::CalculateRoadType()
+{
+	// Initialize the RoadTypeLayerGrid with EMPTY values
+	RoadLayerGrid.Init(EMPTY, GridSize * GridSize);
+	// Set the RoadTypeLayerGrid to the same values as the main grid
+	for (int32 y = 0; y < GridSize; ++y)
+	{
+		for (int32 x = 0; x < GridSize; ++x)
+		{
+			int32 Index = GetIndex(x, y);
+			if (Grid[Index] == ROAD) {
+				RoadLayerGrid[Index] = GetRoadType(Index);
+				ISMTile->SetCustomDataValue(Index, 1, RoadLayerGrid[Index], true);
+			}
+		}
+	}
+}
+
 void ACA_CityLayout::InitializeWaterLayerGridValues()
 {
     WaterLayerGrid.Init(0, GridSize * GridSize);
@@ -1910,6 +1928,154 @@ void ACA_CityLayout::FindLargestRectangle(TArray<int32>& ComponentIndices,int32&
     }
     OutSizeX = BestWidth;
     OutSizeY = BestHeight;
+}
+
+int32 ACA_CityLayout::GetRoadType(int32 RoadIndex) const
+{
+    TArray<FIntPoint> Neighbors = GetMooreNeighbors(RoadIndex % GridSize, RoadIndex / GridSize);
+    TArray<int32> RoadNeighborsIndex;
+	for (int x = Neighbors.Num() - 1; x >= 0; x--)
+	{
+		int32 Index = GetIndex(Neighbors[x].X, Neighbors[x].Y);
+        
+        if (Grid[Index] <= ROAD) {
+			Neighbors.RemoveAt(x); // Remove the road neighbor from the list
+        }
+	}
+    for (int32 x = 0; x < Neighbors.Num(); x++) {
+        int32 Index = GetIndex(Neighbors[x].X, Neighbors[x].Y);
+        UE_LOG(LogTemp, Warning, TEXT("Grid[%d]: %d  x:%d   y:%d"), Index, Grid[Index], Neighbors[x].X, Neighbors[x].Y);
+    }
+	UE_LOG(LogTemp, Warning, TEXT("RoadIndex %d:  | x:%d y:%d |"), RoadIndex, RoadIndex % GridSize, RoadIndex / GridSize);
+	UE_LOG(LogTemp, Warning, TEXT("============================="));
+ //   for (FIntPoint Neighbor : Neighbors)
+ //   {
+ //       int32 NeighborIndex = GetIndex(Neighbor.X, Neighbor.Y);
+	//	// Print Grid[NeighborIndex] for debugging
+	//	UE_LOG(LogTemp, Warning, TEXT("Grid[%d]: %d  x:%d   y:%d"), NeighborIndex, Grid[NeighborIndex], Neighbor.X, Neighbor.Y);
+ //       if (Grid[NeighborIndex] <= ROAD)
+ //       {
+ //           Neighbors.Remove(Neighbor); // Remove the road neighbor from the list
+ //       }
+ //       RoadNeighborsIndex.Add(NeighborIndex);
+ //   }
+	//// Print All Neighbors for that RoadIndex
+ //   UE_LOG(LogTemp, Warning, TEXT("Neighbors for RoadIndex %d:  | x:%d y:%d |"), RoadIndex, RoadIndex % GridSize, RoadIndex / GridSize);
+ //   for (const auto& Neighbor : Neighbors)
+ //   {
+	//UE_LOG(LogTemp, Warning, TEXT("Neighbor: (%d, %d) Index: %d"), Neighbor.X, Neighbor.Y, GetIndex(Neighbor.X, Neighbor.Y));
+ //   }
+    if (Neighbors.Num() == 0)
+    {
+        return 1; // No neighbors, return default road type
+    }
+    // Else if Has 1 neighbor and Contains Top Left Neighbor
+	else if (Neighbors.Num() == 1 && Neighbors.Contains(FIntPoint(RoadIndex % GridSize - 1, RoadIndex / GridSize + 1)))
+	{
+		return 2; // Top Left Road
+	}
+	// Else if Has 1 neighbor and Contains Bot Left Neighbor
+	else if (Neighbors.Num() == 1 && Neighbors.Contains(FIntPoint(RoadIndex % GridSize - 1, RoadIndex / GridSize - 1)))
+    {
+		return 3; // Bot Left Road
+    }
+	// Else if Has 1 neighbor and Contains Top Right Neighbor
+	else if (Neighbors.Num() == 1 && Neighbors.Contains(FIntPoint(RoadIndex % GridSize + 1, RoadIndex / GridSize + 1)))
+	{
+		return 4; // Top Right Road
+	}
+	// Else if Has 1 neighbor and Contains Bot Right Neighbor
+	else if (Neighbors.Num() == 1 && Neighbors.Contains(FIntPoint(RoadIndex % GridSize + 1, RoadIndex / GridSize - 1)))
+	{
+		return 5; // Bot Right Road
+	}
+	// Else if Has 2 neighbors and Contains Top Left and Top Right Neighbors
+	else if (Neighbors.Num() == 2 && Neighbors.Contains(FIntPoint(RoadIndex % GridSize - 1, RoadIndex / GridSize + 1)) && Neighbors.Contains(FIntPoint(RoadIndex % GridSize + 1, RoadIndex / GridSize + 1)))
+	{
+		return 6; // Top Road
+	}
+	// Else if Has 2 neighbors and Contains Bot Left and Bot Right Neighbors
+	else if (Neighbors.Num() == 2 && Neighbors.Contains(FIntPoint(RoadIndex % GridSize - 1, RoadIndex / GridSize - 1)) && Neighbors.Contains(FIntPoint(RoadIndex % GridSize + 1, RoadIndex / GridSize - 1)))
+	{
+		return 7; // Bot Road
+	}
+	// Else if Has 2 neighbors and Contains Top Right and Bot Right Neighbors
+	else if (Neighbors.Num() == 2 && Neighbors.Contains(FIntPoint(RoadIndex % GridSize + 1, RoadIndex / GridSize + 1)) && Neighbors.Contains(FIntPoint(RoadIndex % GridSize + 1, RoadIndex / GridSize - 1)))
+	{
+		return 8; // Right Road
+	}
+	// Else if Has 2 neighbors and Contains Top Left and Bot Left Neighbors
+	else if (Neighbors.Num() == 2 && Neighbors.Contains(FIntPoint(RoadIndex % GridSize - 1, RoadIndex / GridSize + 1)) && Neighbors.Contains(FIntPoint(RoadIndex % GridSize - 1, RoadIndex / GridSize - 1)))
+	{
+		return 9; // Left Road
+	}
+	// Else if Contains Left Neighbor and Not Contains Top Neighbor and Not Contains Bot Neighbor
+	else if (Neighbors.Contains(FIntPoint(RoadIndex % GridSize - 1, RoadIndex / GridSize)) && !Neighbors.Contains(FIntPoint(RoadIndex % GridSize, RoadIndex / GridSize + 1)) && !Neighbors.Contains(FIntPoint(RoadIndex % GridSize, RoadIndex / GridSize - 1)))
+	{
+        UE_LOG(LogTemp, Warning, TEXT("x : %d, y : %d"), RoadIndex % GridSize - 1, RoadIndex / GridSize);
+		return 10; // Left Road
+	}
+	// Else if Contains Top Neighbor and Not Contains Left Neighbor and Not Contains Right Neighbor
+	else if (Neighbors.Contains(FIntPoint(RoadIndex % GridSize, RoadIndex / GridSize + 1)) && !Neighbors.Contains(FIntPoint(RoadIndex % GridSize - 1, RoadIndex / GridSize)) && !Neighbors.Contains(FIntPoint(RoadIndex % GridSize + 1, RoadIndex / GridSize)))
+	{
+        UE_LOG(LogTemp, Warning, TEXT("x : %d, y : %d"), RoadIndex % GridSize, RoadIndex / GridSize + 1);
+		return 11; // Top Road
+	}
+	// Else if Contains Right Neighbor and Not Contains Top Neighbor and Not Contains Bot Neighbor
+	else if (Neighbors.Contains(FIntPoint(RoadIndex % GridSize + 1, RoadIndex / GridSize)) && !Neighbors.Contains(FIntPoint(RoadIndex % GridSize, RoadIndex / GridSize + 1)) && !Neighbors.Contains(FIntPoint(RoadIndex % GridSize, RoadIndex / GridSize - 1)))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("x : %d, y : %d"), RoadIndex % GridSize + 1, RoadIndex / GridSize);
+		return 12; // Right Road
+	}
+	// Else if Contains Bot Neighbor and Not Contains Left Neighbor and Not Contains Right Neighbor
+	else if (Neighbors.Contains(FIntPoint(RoadIndex % GridSize, RoadIndex / GridSize - 1)) && !Neighbors.Contains(FIntPoint(RoadIndex % GridSize - 1, RoadIndex / GridSize)) && !Neighbors.Contains(FIntPoint(RoadIndex % GridSize + 1, RoadIndex / GridSize)))
+	{
+        UE_LOG(LogTemp, Warning, TEXT("x : %d, y : %d"), RoadIndex % GridSize , RoadIndex / GridSize - 1);
+		return 13; // Bot Road
+	}
+	// Else if Contains Left Neighbor and Contains Top Neighbor
+	else if (Neighbors.Contains(FIntPoint(RoadIndex % GridSize - 1, RoadIndex / GridSize)) && Neighbors.Contains(FIntPoint(RoadIndex % GridSize, RoadIndex / GridSize + 1)))
+    {
+        return 14; // Left Top
+    }
+	// Else if Contains Top Neighbor and Contains Right Neighbor
+	else if (Neighbors.Contains(FIntPoint(RoadIndex % GridSize, RoadIndex / GridSize + 1)) && Neighbors.Contains(FIntPoint(RoadIndex % GridSize + 1, RoadIndex / GridSize)))
+	{
+		return 15; // Top Right
+	}
+	// Else if Contains Left Neighbor and Contains Bot Neighbor
+	else if (Neighbors.Contains(FIntPoint(RoadIndex % GridSize - 1, RoadIndex / GridSize)) && Neighbors.Contains(FIntPoint(RoadIndex % GridSize, RoadIndex / GridSize - 1)))
+	{
+		return 16; // Left Bot
+	}
+	// Else if Contains Right Neighbor and Contains Bot Neighbor
+	else if (Neighbors.Contains(FIntPoint(RoadIndex % GridSize + 1, RoadIndex / GridSize)) && Neighbors.Contains(FIntPoint(RoadIndex % GridSize, RoadIndex / GridSize - 1)))
+	{
+		return 17; // Right Bot
+	}
+	// Else if Contains Left Neighbor and Contains Bot Neighbor and Contains Top Neighbor
+	else if (Neighbors.Contains(FIntPoint(RoadIndex % GridSize - 1, RoadIndex / GridSize)) && Neighbors.Contains(FIntPoint(RoadIndex % GridSize, RoadIndex / GridSize - 1)) && Neighbors.Contains(FIntPoint(RoadIndex % GridSize, RoadIndex / GridSize + 1)))
+	{
+		return 18; // Left Bot Top
+	}
+	// Else if Contains Left Neighbor and Contains Top Neighbor and Contains Right Neighbor
+	else if (Neighbors.Contains(FIntPoint(RoadIndex % GridSize - 1, RoadIndex / GridSize)) && Neighbors.Contains(FIntPoint(RoadIndex % GridSize, RoadIndex / GridSize + 1)) && Neighbors.Contains(FIntPoint(RoadIndex % GridSize + 1, RoadIndex / GridSize)))
+	{
+		return 19; // Left Top Right
+	}
+	// Else if Contains Right Neighbor and Contains Bot Neighbor and Contains Left Neighbor
+	else if (Neighbors.Contains(FIntPoint(RoadIndex % GridSize + 1, RoadIndex / GridSize)) && Neighbors.Contains(FIntPoint(RoadIndex % GridSize, RoadIndex / GridSize - 1)) && Neighbors.Contains(FIntPoint(RoadIndex % GridSize - 1, RoadIndex / GridSize)))
+	{
+		return 20; // Right Bot Left
+	}
+	// Else if Contains Right Neighbor and Contains Top Neighbor and Contains Bot Neighbor
+	else if (Neighbors.Contains(FIntPoint(RoadIndex % GridSize + 1, RoadIndex / GridSize)) && Neighbors.Contains(FIntPoint(RoadIndex % GridSize, RoadIndex / GridSize + 1)) && Neighbors.Contains(FIntPoint(RoadIndex % GridSize, RoadIndex / GridSize - 1)))
+	{
+		return 21; // Right Top Bot
+	}
+
+
+    return 0;
 }
 
 

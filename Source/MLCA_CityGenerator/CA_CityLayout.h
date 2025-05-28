@@ -83,24 +83,24 @@ public:
 	int32 maxYSizeCommercial = 5;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
-	int32 minHeightCommercial = 1;
+	int32 minHeightCommercial = 8;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
-	int32 maxHeightCommercial = 4;
+	int32 maxHeightCommercial = 15;
 
 
 	// Industrial building size
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
-	int32 minXSizeIndustrial = 6;
+	int32 minXSizeIndustrial = 8;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
-	int32 minYSizeIndustrial = 6;
+	int32 minYSizeIndustrial = 8;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
-	int32 maxXSizeIndustrial = 10;
+	int32 maxXSizeIndustrial = 12;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
-	int32 maxYSizeIndustrial = 10;
+	int32 maxYSizeIndustrial = 12;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
 	int32 minHeightIndustrial = 3;
@@ -311,6 +311,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void AddRoadWidth();
 
+	UFUNCTION(BlueprintCallable)
+	void CalculateRoadType();
+
 
 
 protected:
@@ -372,6 +375,8 @@ protected:
 	int32 GetMinY(TArray<int32>& GridArray);
 
 	void FindLargestRectangle(TArray<int32>& ComponentIndices,int32& OutSizeX, int32& OutSizeY, int DistrictType);
+
+	int32 GetRoadType(int32 RoadIndex) const;
 
 
 public:	
