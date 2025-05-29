@@ -109,31 +109,31 @@ public:
 	int32 maxHeightIndustrial = 5;
 
 	// Instanced Static Mesh Component for visualization
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
+    UPROPERTY(BlueprintReadWrite, Category = "Visual")
     UInstancedStaticMeshComponent* InstancedGridMesh;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
+	UPROPERTY(BlueprintReadWrite, Category = "Visual")
 	UInstancedStaticMeshComponent* ISMBlocks;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
+	UPROPERTY(BlueprintReadWrite, Category = "Visual")
 	UInstancedStaticMeshComponent* ISMTree;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
+	UPROPERTY(BlueprintReadWrite, Category = "Visual")
 	UInstancedStaticMeshComponent* ISMTreeV2;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
+	UPROPERTY(BlueprintReadWrite, Category = "Visual")
 	UInstancedStaticMeshComponent* ISMTreeV3;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
+	UPROPERTY(BlueprintReadWrite, Category = "Visual")
 	UInstancedStaticMeshComponent* ISMTile;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
+	UPROPERTY(BlueprintReadWrite, Category = "Visual")
 	UInstancedStaticMeshComponent* ISMGrass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
+	UPROPERTY(BlueprintReadWrite, Category = "Visual")
 	UInstancedStaticMeshComponent* ISMGrassV2;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
+	UPROPERTY(BlueprintReadWrite, Category = "Visual")
 	UInstancedStaticMeshComponent* ISMBush;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Water")
@@ -184,56 +184,55 @@ public:
 	UPROPERTY(BlueprintReadOnly)
 	int32 Iterations = 0;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite)
 	TArray<FRoadStruct> RoadArray;
 
-	UPROPERTY(EditAnywhere)
 	TMap<int32, FLinearColor> DistrictColors;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool IsMeetAJunction = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite)
 	TArray<int32> Grid;
 
 	// Layers Array
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite)
     TArray<int32> RoadLayerGrid;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite)
 	TArray<int32> DistrictLayerGrid;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite)
     TArray<int32> WaterLayerGrid;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite)
 	TArray<int32> ElectricityLayerGrid;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite)
 	TArray<int32> PopulationSatisfactionLayerGrid;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite)
 	TArray<int32> PolutionLayerGrid;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite)
 	TArray<int32> PopulationDensityLayerGrid;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite)
 	TArray<int32> RoadAccessibilityLayerGrid;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite)
 	TArray<int32> SecurityLayerGrid;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite)
 	TArray<int32> TreeLayerArray;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite)
 	TArray<int32> TileLayerArray;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite)
 	TArray<int32> BuildingLayerArray;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite)
 	TArray<FDistrictStruct> DistrictArray;
 
     UFUNCTION(BlueprintCallable, CallInEditor)
