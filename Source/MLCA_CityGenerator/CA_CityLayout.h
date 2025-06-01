@@ -109,31 +109,31 @@ public:
 	int32 maxHeightIndustrial = 5;
 
 	// Instanced Static Mesh Component for visualization
-    UPROPERTY(BlueprintReadWrite, Category = "Visual")
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Visual")
     UInstancedStaticMeshComponent* InstancedGridMesh;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Visual")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Visual")
 	UInstancedStaticMeshComponent* ISMBlocks;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Visual")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Visual")
 	UInstancedStaticMeshComponent* ISMTree;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Visual")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Visual")
 	UInstancedStaticMeshComponent* ISMTreeV2;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Visual")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Visual")
 	UInstancedStaticMeshComponent* ISMTreeV3;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Visual")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Visual")
 	UInstancedStaticMeshComponent* ISMTile;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Visual")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Visual")
 	UInstancedStaticMeshComponent* ISMGrass;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Visual")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Visual")
 	UInstancedStaticMeshComponent* ISMGrassV2;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Visual")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Visual")
 	UInstancedStaticMeshComponent* ISMBush;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Water")
