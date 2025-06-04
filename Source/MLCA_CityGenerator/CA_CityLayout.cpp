@@ -358,6 +358,7 @@ void ACA_CityLayout::UpdateISMToSpecificLayer(ELayerEnum LayerEnum)
     FLinearColor GreenColor = FLinearColor::Green;
     FLinearColor BlueColor = FLinearColor::Blue;
     FLinearColor YellowColor = FLinearColor::Yellow;
+    FLinearColor RedColor = FLinearColor::Red;
     switch (LayerEnum)
     {
     case ELayerEnum::Road:
@@ -545,7 +546,29 @@ void ACA_CityLayout::UpdateISMToSpecificLayer(ELayerEnum LayerEnum)
 
         break;
     case ELayerEnum::Accessibility:
-
+        // for loop through the PolutionLayerGrid and set the material color according to the value
+        for (int32 y = 0; y < GridSize; ++y)
+        {
+            for (int32 x = 0; x < GridSize; ++x)
+            {
+                int32 Index = GetIndex(x, y);
+                if (RoadAccessibilityLayerGrid[Index] > 0)
+                {
+                    InstancedGridMesh->SetCustomDataValue(Index, 0, RedColor.R);
+                    InstancedGridMesh->SetCustomDataValue(Index, 1, YellowColor.G);
+                    InstancedGridMesh->SetCustomDataValue(Index, 2, YellowColor.B);
+                    InstancedGridMesh->SetCustomDataValue(Index, 3, static_cast<float>(RoadAccessibilityLayerGrid[Index]) / 100.0);
+                    InstancedGridMesh->SetCustomDataValue(Index, 4, 0.5);
+                }
+                else {
+                    InstancedGridMesh->SetCustomDataValue(Index, 0, GrayColor.R);
+                    InstancedGridMesh->SetCustomDataValue(Index, 1, GrayColor.G);
+                    InstancedGridMesh->SetCustomDataValue(Index, 2, GrayColor.B);
+                    InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                    InstancedGridMesh->SetCustomDataValue(Index, 4, 0);
+                }
+            }
+        }
         break;
     case ELayerEnum::Security:
         // for loop through the PolutionLayerGrid and set the material color according to the value
@@ -933,7 +956,7 @@ void ACA_CityLayout::GrowDistricts(TArray<int32>& OutGrid)
                 }
             }
 
-            if ((DistrictIDs.Num() == 1 && RNG.FRand() < GrowthProb))
+            if ((DistrictIDs.Num() == 1 && RNG.FRand() <= GrowthProb))
             {
                 OutGrid[Index] = DistrictIDs.Array()[0];
             }
@@ -1217,7 +1240,10 @@ void ACA_CityLayout::SetTreeLayerGridValues()
         if (Grid[TreeIndex] < 0)
 			TreeLayerArray[TreeIndex] = -1; // Skip if not valid for tree placement
 
-		if (DistrictLayerGrid[TreeIndex] != RESIDENTIAL)
+		if (DistrictLayerGrid[TreeIndex] == COMMERCIAL)
+			TreeLayerArray[TreeIndex] = -1; // Skip if not valid for tree placement
+
+		if (DistrictLayerGrid[TreeIndex] == INDUSTRIAL && !HasNeighboringRoad(TreeIndex % GridSize, TreeIndex / GridSize, 1))
 			TreeLayerArray[TreeIndex] = -1; // Skip if not valid for tree placement
 
 		if (TreeLayerArray[TreeIndex] == -1) continue; // Skip if not valid for tree placement
@@ -1235,19 +1261,19 @@ void ACA_CityLayout::SetTreeLayerGridValues()
             TreeLayerArray[TreeIndex] = 3; // 5% chance for ISMTreeV3
 			ISMTreeV3->AddInstance(InstanceTransform, true);
 		}
-        else if (RandomVariant < 35) {
+        else if (RandomVariant < 35 && DistrictLayerGrid[TreeIndex] != INDUSTRIAL) {
             TreeLayerArray[TreeIndex] = 4; // 20% chance for ISMGrass
 			int32 RandomHeight = FMath::RandRange(0, 30);
 			InstanceTransform.AddToTranslation(FVector(0, 0, RandomHeight)); // Adjust height for visibility
 			ISMGrass->AddInstance(InstanceTransform, true);
         }
-        else if (RandomVariant < 55) {
+        else if (RandomVariant < 55 && DistrictLayerGrid[TreeIndex] != INDUSTRIAL) {
             TreeLayerArray[TreeIndex] = 5; // 20% chance for ISMGrassV2
 			float RandomSize = FMath::RandRange(1.5f, 2.5f);
 			InstanceTransform.SetScale3D(FVector(RandomSize, RandomSize, RandomSize)); // Random scale for grass
 			ISMGrassV2->AddInstance(InstanceTransform, true);
         }
-        else if (RandomVariant < 65) {
+        else if (RandomVariant < 65 && DistrictLayerGrid[TreeIndex] != INDUSTRIAL) {
             TreeLayerArray[TreeIndex] = 6; // 10% chance for ISMBush
 			ISMBush->AddInstance(InstanceTransform, true);
         }
@@ -1297,7 +1323,7 @@ void ACA_CityLayout::AddRoadWidth()
 		for (int32 x = 0; x < GridSize; ++x)
 		{
 			int32 Index = GetIndex(x, y);
-			if (HasNeighboringRoad(x, y, 1))
+			if (HasNeighboringRoad(x, y, AdditionalRoadWidth))
 			{
 				GridCopy[Index] = ROAD;
 			}
@@ -1392,7 +1418,27 @@ void ACA_CityLayout::InitializePopulationDensityLayerGridValues()
 
 void ACA_CityLayout::InitializeRoadAccessibilityLayerGridValues()
 {
-    RoadAccessibilityLayerGrid.Init(10, GridSize * GridSize);
+    //RoadAccessibilityLayerGrid.Init(10, GridSize * GridSize);
+	// for loop each cell in the grid
+	RoadAccessibilityLayerGrid.Init(0, GridSize * GridSize);
+	for (int32 y = 0; y < GridSize; ++y)
+	{
+		for (int32 x = 0; x < GridSize; ++x)
+		{
+			int32 Index = GetIndex(x, y);
+			if (Grid[Index] == ROAD) {
+				RoadAccessibilityLayerGrid[Index] = 100;
+			}
+			int32 RoadAccessibilityValue = 100 - 20 * (GetMinDistanceToRoad(x, y) - 1);
+			if (RoadAccessibilityValue < 0) {
+				RoadAccessibilityValue = 0;
+			}
+			else if (RoadAccessibilityValue > 100) {
+				RoadAccessibilityValue = 0;
+			}
+			RoadAccessibilityLayerGrid[Index] = RoadAccessibilityValue;
+		}
+	}
 }
 
 void ACA_CityLayout::InitializeSecurityLayerGridValues()
@@ -1456,6 +1502,7 @@ void ACA_CityLayout::DoBSP_Grid(int32 X, int32 Y, int32 Width, int32 Height, int
             FBlockCellStruct NewBlockCell;
             int32 currentID = NextID++;
             NewBlockCell.BlockID = currentID;
+			bool bHasRoadAccess = false;
             // Loop untuk menambahkan BlockIndex ke dalam NewBlockCell BlockArray
             for (int32 i = 0; i < BlockIndex.Num(); ++i)
             {
@@ -1464,8 +1511,13 @@ void ACA_CityLayout::DoBSP_Grid(int32 X, int32 Y, int32 Width, int32 Height, int
 
                 NewBlockCell.BlockArray.Add(BlockIndex[i]);
                 CellCount++;
+				if (RoadAccessibilityLayerGrid[BlockIndex[i]] > 0)
+				{
+					bHasRoadAccess = true;
+				}
             }
             //UE_LOG(LogTemp, Warning, TEXT("=========================="));
+            if (bHasRoadAccess)
             DistrictArray[CurrentDistrict].BlockCellArray.Add(NewBlockCell);
             
         }
@@ -2076,6 +2128,40 @@ int32 ACA_CityLayout::GetRoadType(int32 RoadIndex) const
 
 
     return 0;
+}
+
+int32 ACA_CityLayout::GetMinDistanceToRoad(int32 X, int32 Y) const
+{
+	// Get the index of the cell
+	int32 Index = GetIndex(X, Y);
+	// If the cell is a road, return 0
+	if (Grid[Index] == ROAD) {      
+		return 0;
+	}
+	// Initialize the minimum distance to a large value
+	int32 MinDistance = GridSize * 2; // Maximum possible distance in the grid
+	int32 Radius = 1;
+    while(true)
+    {
+        TArray<FIntPoint> Neighbors = GetMooreNeighborsWithinRadius(X, Y, Radius);
+        // Loop through the neighbors
+		for (const auto& Neighbor : Neighbors)
+		{
+			int32 NeighborIndex = GetIndex(Neighbor.X, Neighbor.Y);
+			// If the neighbor is a road, calculate the distance
+			if (Grid[NeighborIndex] == ROAD)
+			{
+				return Radius;
+			}
+            
+		}
+		Radius++;
+		// If the radius exceeds the grid size, break the loop
+        if (Radius > MinRoadAccessDistance) {
+            break;
+        }
+    }
+    return -1;
 }
 
 

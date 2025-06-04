@@ -44,6 +44,9 @@ public:
     int32 MinSeedDistance = 3;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	int32 AdditionalRoadWidth = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
 	int32 InSeed = 42;
 
 	// Cell size for visualization
@@ -156,6 +159,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Satisfaction")
 	int32 PoliceStationSpreadDistance = 15;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RoadAccess")
+	int32 MinRoadAccessDistance = 3;
 
 	// Thresholds for each layer
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Threshold")
@@ -376,6 +382,8 @@ protected:
 	void FindLargestRectangle(TArray<int32>& ComponentIndices,int32& OutSizeX, int32& OutSizeY, int DistrictType);
 
 	int32 GetRoadType(int32 RoadIndex) const;
+
+	int32 GetMinDistanceToRoad(int32 X, int32 Y) const;
 
 
 public:	
