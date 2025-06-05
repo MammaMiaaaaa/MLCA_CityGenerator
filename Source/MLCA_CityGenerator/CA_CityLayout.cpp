@@ -80,30 +80,96 @@ void ACA_CityLayout::PlaceSeeds()
     int32 Attempts = 0;
     const int32 MaxAttempts = GridSize * GridSize;
 
-    while (SeedPositions.Num() < NumDistricts && Attempts < MaxAttempts)
-    {
-        int32 X = RNG.RandRange(0, GridSize - 1);
-        int32 Y = RNG.RandRange(0, GridSize - 1);
-        FIntPoint Pos(X, Y);
+	if (bOrganizedSeedPlacement)
+	{
+        // Cari kombinasi rows dan cols yang hasil perkaliannya == NumSeeds, dan selisihnya minimum
+        int32 BestRows = 1, BestCols = NumDistricts;
+        int32 MinDiff = NumDistricts; // Selisih minimum antara rows dan cols
 
-        bool IsValid = true;
-        for (const auto& Seed : SeedPositions)
+        for (int32 r = 1; r <= NumDistricts; ++r)
         {
-            if (ManhattanDistance(Seed, Pos) < MinSeedDistance)
+            if (NumDistricts % r == 0)
             {
-                IsValid = false;
-                break;
+                int32 c = NumDistricts / r;
+                if (r > 1 && c > 1 && FMath::Abs(r - c) < MinDiff)
+                {
+                    BestRows = r;
+                    BestCols = c;
+                    MinDiff = FMath::Abs(r - c);
+                }
             }
         }
 
-        if (IsValid)
-        {
-            SeedPositions.Add(Pos);
-            Grid[GetIndex(X, Y)] = SeedPositions.Num(); // District IDs start from 1
-        }
+        bool IsFullGrid = (BestRows > 1 && BestCols > 1 && BestRows * BestCols == NumDistricts);
 
-        Attempts++;
-    }
+        if (IsFullGrid)
+        {
+            // Grid penuh, seed diatur dalam rows x cols
+            float XSpacing = static_cast<float>(GridSize) / (BestCols + 1);
+            float YSpacing = static_cast<float>(GridSize) / (BestRows + 1);
+
+            for (int32 r = 1; r <= BestRows; ++r)
+            {
+                for (int32 c = 1; c <= BestCols; ++c)
+                {
+                    int32 X = FMath::RoundToInt(c * XSpacing);
+                    int32 Y = FMath::RoundToInt(r * YSpacing);
+                    SeedPositions.Add(FIntPoint(X, Y));
+                    Grid[GetIndex(X, Y)] = SeedPositions.Num(); // District IDs start from 1
+                }
+            }
+        }
+        else
+        {
+            // Fallback: grid persegi terdekat, seed diisi sebanyak mungkin
+            int32 GridDim = FMath::CeilToInt(FMath::Sqrt(static_cast<float>(NumDistricts)));
+            int32 Rows = GridDim;
+            int32 Cols = GridDim;
+            while ((Rows - 1) * Cols >= NumDistricts) Rows--;
+
+            float XSpacing = static_cast<float>(GridSize) / (Cols + 1);
+            float YSpacing = static_cast<float>(GridSize) / (Rows + 1);
+
+            int32 SeedCount = 0;
+            for (int32 r = 1; r <= Rows && SeedCount < NumDistricts; ++r)
+            {
+                for (int32 c = 1; c <= Cols && SeedCount < NumDistricts; ++c)
+                {
+                    int32 X = FMath::RoundToInt(c * XSpacing);
+                    int32 Y = FMath::RoundToInt(r * YSpacing);
+                    SeedPositions.Add(FIntPoint(X, Y));
+                    Grid[GetIndex(X, Y)] = SeedPositions.Num(); // District IDs start from 1
+                    ++SeedCount;
+                }
+            }
+        }
+	}
+	else
+	{
+		// Random seed placement
+		while (SeedPositions.Num() < NumDistricts && Attempts < MaxAttempts)
+		{
+			int32 X = RNG.RandRange(0, GridSize - 1);
+			int32 Y = RNG.RandRange(0, GridSize - 1);
+			FIntPoint Pos(X, Y);
+			bool IsValid = true;
+			for (const auto& Seed : SeedPositions)
+			{
+				if (ManhattanDistance(Seed, Pos) < MinSeedDistance)
+				{
+					IsValid = false;
+					break;
+				}
+			}
+			if (IsValid)
+			{
+				SeedPositions.Add(Pos);
+				Grid[GetIndex(X, Y)] = SeedPositions.Num(); // District IDs start from 1
+			}
+			Attempts++;
+		}
+	}
+    
 
     if (SeedPositions.Num() < NumDistricts)
     {
@@ -734,98 +800,126 @@ void ACA_CityLayout::AddBuildingEffects(EBuildingTypeEnum BuildingType, int32 Ti
 void ACA_CityLayout::CalculateDistrictType()
 {
 	// Loop through the DistrictArray
-	for (int32 i = 0; i < DistrictArray.Num(); ++i)
-	{
-
-		float WaterValue = 0;
-        float ElectricityValue = 0;
-        float PopulationSatisfactionValue = 0;
-        float PolutionValue = 0;
-        float PopulationDensityValue = 0;
-        float RoadAccessibilityValue = 0;
-        float SecurityValue = 0;
-
-		bool bIsEnoughWater = false;
-		bool bIsEnoughElectricity = false;
-		bool bIsEnoughPopulationSatisfaction = false;
-		bool bIsEnoughPolution = false;
-		bool bIsEnoughPopulationDensity = false;
-		bool bIsEnoughRoadAccessibility = false;
-		bool bIsEnoughSecurity = false;
-
-        float MaxValue = DistrictArray[i].DistrictCellIndex.Num() * 100;
-
-		// Loop for each cell index in the DistrictCellIndex
-        for (int32 j = 0; j < DistrictArray[i].DistrictCellIndex.Num(); ++j)
+    if (bUseMLCAValues) 
+    {
+        for (int32 i = 0; i < DistrictArray.Num(); ++i)
         {
-            WaterValue += WaterLayerGrid[DistrictArray[i].DistrictCellIndex[j]];
-            ElectricityValue += ElectricityLayerGrid[DistrictArray[i].DistrictCellIndex[j]];
-            PopulationSatisfactionValue += PopulationSatisfactionLayerGrid[DistrictArray[i].DistrictCellIndex[j]];
-            PolutionValue += PolutionLayerGrid[DistrictArray[i].DistrictCellIndex[j]];
-            PopulationDensityValue += PopulationDensityLayerGrid[DistrictArray[i].DistrictCellIndex[j]];
-            RoadAccessibilityValue += RoadAccessibilityLayerGrid[DistrictArray[i].DistrictCellIndex[j]];
-            SecurityValue += SecurityLayerGrid[DistrictArray[i].DistrictCellIndex[j]];
 
-            if (WaterValue >= MaxValue * WaterThreshold / 100) {
-                bIsEnoughWater = true;
-            }
-            if (ElectricityValue >= MaxValue * ElectricityThreshold / 100) {
-                bIsEnoughElectricity = true;
-            }
-            if (PopulationSatisfactionValue >= MaxValue * PopulationSatisfactionThreshold / 100) {
-                bIsEnoughPopulationSatisfaction = true;
-            }
-            if (PolutionValue < MaxValue * PolutionThreshold / 100) {
-                bIsEnoughPolution = true;
-            }
-            if (PopulationDensityValue >= MaxValue * PopulationDensityThreshold / 100) {
-                bIsEnoughPopulationDensity = true;
-            }
-            if (RoadAccessibilityValue >= MaxValue * RoadAccessibilityThreshold / 100) {
-                bIsEnoughRoadAccessibility = true;
-            }
-            if (SecurityValue >= MaxValue * SecurityThreshold / 100) {
-                bIsEnoughSecurity = true;
-            }
-            
+            float WaterValue = 0;
+            float ElectricityValue = 0;
+            float PopulationSatisfactionValue = 0;
+            float PolutionValue = 0;
+            float PopulationDensityValue = 0;
+            float RoadAccessibilityValue = 0;
+            float SecurityValue = 0;
 
-        }
-		DistrictArray[i].WaterAvailValue = (WaterValue/MaxValue);
-		DistrictArray[i].ElectricityAvailValue = (ElectricityValue / MaxValue);
-		DistrictArray[i].PopulationSatisfactionValue = (PopulationSatisfactionValue / MaxValue);
-		DistrictArray[i].PolutionValue = (PolutionValue / MaxValue);
-		DistrictArray[i].PopulationDensityValue = (PopulationDensityValue / MaxValue);
-		DistrictArray[i].RoadAccessibilityValue = (RoadAccessibilityValue / MaxValue);
-		DistrictArray[i].SecurityValue = (SecurityValue / MaxValue);
+            bool bIsEnoughWater = false;
+            bool bIsEnoughElectricity = false;
+            bool bIsEnoughPopulationSatisfaction = false;
+            bool bIsEnoughPolution = false;
+            bool bIsEnoughPopulationDensity = false;
+            bool bIsEnoughRoadAccessibility = false;
+            bool bIsEnoughSecurity = false;
 
-        if (bIsEnoughWater && bIsEnoughElectricity && bIsEnoughPopulationSatisfaction && bIsEnoughPolution && bIsEnoughSecurity)
-        {
-            DistrictArray[i].AvailableDistrictType.AddUnique(RESIDENTIAL);
+            float MaxValue = DistrictArray[i].DistrictCellIndex.Num() * 100;
+
+            // Loop for each cell index in the DistrictCellIndex
+            for (int32 j = 0; j < DistrictArray[i].DistrictCellIndex.Num(); ++j)
+            {
+                WaterValue += WaterLayerGrid[DistrictArray[i].DistrictCellIndex[j]];
+                ElectricityValue += ElectricityLayerGrid[DistrictArray[i].DistrictCellIndex[j]];
+                PopulationSatisfactionValue += PopulationSatisfactionLayerGrid[DistrictArray[i].DistrictCellIndex[j]];
+                PolutionValue += PolutionLayerGrid[DistrictArray[i].DistrictCellIndex[j]];
+                PopulationDensityValue += PopulationDensityLayerGrid[DistrictArray[i].DistrictCellIndex[j]];
+                RoadAccessibilityValue += RoadAccessibilityLayerGrid[DistrictArray[i].DistrictCellIndex[j]];
+                SecurityValue += SecurityLayerGrid[DistrictArray[i].DistrictCellIndex[j]];
+
+                if (WaterValue >= MaxValue * WaterThreshold / 100) {
+                    bIsEnoughWater = true;
+                }
+                if (ElectricityValue >= MaxValue * ElectricityThreshold / 100) {
+                    bIsEnoughElectricity = true;
+                }
+                if (PopulationSatisfactionValue >= MaxValue * PopulationSatisfactionThreshold / 100) {
+                    bIsEnoughPopulationSatisfaction = true;
+                }
+                if (PolutionValue < MaxValue * PolutionThreshold / 100) {
+                    bIsEnoughPolution = true;
+                }
+                if (PopulationDensityValue >= MaxValue * PopulationDensityThreshold / 100) {
+                    bIsEnoughPopulationDensity = true;
+                }
+                if (RoadAccessibilityValue >= MaxValue * RoadAccessibilityThreshold / 100) {
+                    bIsEnoughRoadAccessibility = true;
+                }
+                if (SecurityValue >= MaxValue * SecurityThreshold / 100) {
+                    bIsEnoughSecurity = true;
+                }
+            }
+            DistrictArray[i].WaterAvailValue = (WaterValue / MaxValue);
+            DistrictArray[i].ElectricityAvailValue = (ElectricityValue / MaxValue);
+            DistrictArray[i].PopulationSatisfactionValue = (PopulationSatisfactionValue / MaxValue);
+            DistrictArray[i].PolutionValue = (PolutionValue / MaxValue);
+            DistrictArray[i].PopulationDensityValue = (PopulationDensityValue / MaxValue);
+            DistrictArray[i].RoadAccessibilityValue = (RoadAccessibilityValue / MaxValue);
+            DistrictArray[i].SecurityValue = (SecurityValue / MaxValue);
+
+            if (bIsEnoughWater && bIsEnoughElectricity && bIsEnoughPopulationSatisfaction && bIsEnoughPolution && bIsEnoughSecurity)
+            {
+                DistrictArray[i].AvailableDistrictType.AddUnique(RESIDENTIAL);
+            }
+            if (bIsEnoughWater && bIsEnoughElectricity && bIsEnoughPopulationDensity && bIsEnoughRoadAccessibility && bIsEnoughSecurity)
+            {
+                DistrictArray[i].AvailableDistrictType.AddUnique(COMMERCIAL);
+            }
+            if (bIsEnoughWater && bIsEnoughElectricity && bIsEnoughRoadAccessibility && bIsEnoughPolution)
+            {
+                DistrictArray[i].AvailableDistrictType.AddUnique(INDUSTRIAL);
+            }
+            // Randomly assign the DistrictType with AvailableDistrictType
+            if (DistrictArray[i].AvailableDistrictType.Num() > 0)
+            {
+                int32 RandomIndex = FMath::RandRange(0, DistrictArray[i].AvailableDistrictType.Num() - 1);
+                DistrictArray[i].DistrictType = DistrictArray[i].AvailableDistrictType[RandomIndex];
+            }
+            else
+            {
+                DistrictArray[i].DistrictType = 0;
+            }
+            // Set the DistrictLayerGrid to the DistrictType
+            for (int32 j = 0; j < DistrictArray[i].DistrictCellIndex.Num(); ++j)
+            {
+                DistrictLayerGrid[DistrictArray[i].DistrictCellIndex[j]] = DistrictArray[i].DistrictType;
+            }
         }
-        if (bIsEnoughWater && bIsEnoughElectricity && bIsEnoughPopulationDensity && bIsEnoughRoadAccessibility && bIsEnoughSecurity)
-        {
-            DistrictArray[i].AvailableDistrictType.AddUnique(COMMERCIAL);
-        }
-        if (bIsEnoughWater && bIsEnoughElectricity && bIsEnoughRoadAccessibility && bIsEnoughPolution)
-        {
-            DistrictArray[i].AvailableDistrictType.AddUnique(INDUSTRIAL);
-        }
-		// Randomly assign the DistrictType with AvailableDistrictType
-		if (DistrictArray[i].AvailableDistrictType.Num() > 0)
+    }
+    // Use District Weight to Choose District Type
+    else {
+		int32 TotalDistrictWeight = ResidentialDistrictWeight + CommercialDistrictWeight + IndustrialDistrictWeight;
+		for (int32 i = 0; i < DistrictArray.Num(); ++i)
 		{
-			int32 RandomIndex = FMath::RandRange(0, DistrictArray[i].AvailableDistrictType.Num() - 1);
-			DistrictArray[i].DistrictType = DistrictArray[i].AvailableDistrictType[RandomIndex];
+
+			// Get the DistrictType from the DistrictWeight
+			int32 DistrictType = FMath::RandRange(1, TotalDistrictWeight);
+            if (DistrictType <= ResidentialDistrictWeight) {
+				DistrictArray[i].DistrictType = RESIDENTIAL;
+            }
+			else if (DistrictType <= ResidentialDistrictWeight + CommercialDistrictWeight) {
+				DistrictArray[i].DistrictType = COMMERCIAL;
+			}
+			else if (DistrictType <= ResidentialDistrictWeight + CommercialDistrictWeight + IndustrialDistrictWeight) {
+				DistrictArray[i].DistrictType = INDUSTRIAL;
+			}
+			else {
+				DistrictArray[i].DistrictType = EMPTY;
+			}
+			// Set the DistrictLayerGrid to the DistrictType
+			for (int32 j = 0; j < DistrictArray[i].DistrictCellIndex.Num(); ++j)
+			{
+				DistrictLayerGrid[DistrictArray[i].DistrictCellIndex[j]] = DistrictArray[i].DistrictType;
+			}
 		}
-		else
-		{
-			DistrictArray[i].DistrictType = 0;
-		}
-		// Set the DistrictLayerGrid to the DistrictType
-		for (int32 j = 0; j < DistrictArray[i].DistrictCellIndex.Num(); ++j)
-		{
-			DistrictLayerGrid[DistrictArray[i].DistrictCellIndex[j]] = DistrictArray[i].DistrictType;
-		}
-	}
+    }
 }
 
 void ACA_CityLayout::GetAllDistricts()
@@ -1349,6 +1443,79 @@ void ACA_CityLayout::CalculateRoadType()
 			}
 		}
 	}
+}
+
+void ACA_CityLayout::SetBuildingDirection()
+{
+    // for each loop DistrictArray
+    for (int32 i = 0; i < DistrictArray.Num(); ++i)
+    {
+        // for each loop BlockCellArray
+        for (int32 j = 0; j < DistrictArray[i].BlockCellArray.Num(); ++j)
+        {
+			// for each loop BlockArray
+			int32 HighestRoadAccessibilityValue = 0;
+			int32 HighestRoadAccessibilityIndex = -1;
+            for (int32 k = 0; k < DistrictArray[i].BlockCellArray[j].BlockArray.Num(); ++k)
+            {
+                // Get Highest RoadAccessibilityLayerGrid value in the BlockArray
+                int32 BlockIndex = DistrictArray[i].BlockCellArray[j].BlockArray[k];
+                if (RoadAccessibilityLayerGrid[BlockIndex] > HighestRoadAccessibilityValue) {
+                    HighestRoadAccessibilityValue = RoadAccessibilityLayerGrid[BlockIndex];
+					HighestRoadAccessibilityIndex = BlockIndex;
+                }
+            }
+            // Get the center X and Y of BlockCell Array
+			/*int32 CenterX = (DistrictArray[i].BlockCellArray[j].BlockArray[DistrictArray[i].BlockCellArray[j].BlockArray.Num() - 1]) % GridSize - (DistrictArray[i].BlockCellArray[j].SizeX / 2);
+			int32 CenterY = (DistrictArray[i].BlockCellArray[j].BlockArray[DistrictArray[i].BlockCellArray[j].BlockArray.Num() - 1]) / GridSize - (DistrictArray[i].BlockCellArray[j].SizeY / 2);*/
+            if (DistrictArray[i].BlockCellArray[j].BlockArray.Num() > 0)
+            {
+                int32 BotLeftX = DistrictArray[i].BlockCellArray[j].BlockArray[0] % GridSize;
+                int32 BotLeftY = DistrictArray[i].BlockCellArray[j].BlockArray[0] / GridSize;
+                int32 TopRightX = DistrictArray[i].BlockCellArray[j].BlockArray.Last() % GridSize;
+                int32 TopRightY = DistrictArray[i].BlockCellArray[j].BlockArray.Last() / GridSize;
+
+                int32 HighestRoadAccessibilityX = HighestRoadAccessibilityIndex % GridSize;
+                int32 HighestRoadAccessibilityY = HighestRoadAccessibilityIndex / GridSize;
+
+                // Calculate the direction from CenterX, CenterY to HighestRoadAccessibilityX, HighestRoadAccessibilityY
+                // Check if the HighestRoadAccessibilityX is less than CenterX 
+                int32 x = 0;
+                while (true) {
+                    // if the HighestRoadAccessibilityX is the same coloumn Bot LeftX so the direction is LEFT
+                    if (HighestRoadAccessibilityX == BotLeftX + x) {
+                        DistrictArray[i].BlockCellArray[j].BuildingDirection = LEFT;
+						UE_LOG(LogTemp, Warning, TEXT("BlockCell %d in District %d BuildingDirection: LEFT"), j, i);
+                        break;
+                    }
+                    // if the HighestRoadAccessibilityX is the same coloumn Top RightX so the direction is RIGHT
+                    else if (HighestRoadAccessibilityX == TopRightX - x) {
+                        DistrictArray[i].BlockCellArray[j].BuildingDirection = RIGHT;
+						UE_LOG(LogTemp, Warning, TEXT("BlockCell %d in District %d BuildingDirection: RIGHT"), j, i);
+                        break;
+                    }
+                    // if the HighestRoadAccessibilityY is the same row Bot LeftY so the direction is BOTTOM
+                    else if (HighestRoadAccessibilityY == BotLeftY + x) {
+                        DistrictArray[i].BlockCellArray[j].BuildingDirection = BOTTOM;
+						UE_LOG(LogTemp, Warning, TEXT("BlockCell %d in District %d BuildingDirection: BOTTOM"), j, i);
+                        break;
+                    }
+                    // if the HighestRoadAccessibilityY is the same row Top RightY so the direction is TOP
+                    else if (HighestRoadAccessibilityY == TopRightY - x) {
+                        DistrictArray[i].BlockCellArray[j].BuildingDirection = TOP;
+						UE_LOG(LogTemp, Warning, TEXT("BlockCell %d in District %d BuildingDirection: TOP"), j, i);
+                        break;
+                    }
+                    x++;
+                    if (x > 100) {
+                        //UE_LOG(LogTemp, Warning, TEXT("Failed to set BuildingDirection for BlockCell %d in District %d"), j, i);
+                        //DistrictArray[i].BlockCellArray[j].BuildingDirection = NONE;
+                        break;
+                    }
+                }
+            }
+        }
+    }
 }
 
 void ACA_CityLayout::InitializeWaterLayerGridValues()

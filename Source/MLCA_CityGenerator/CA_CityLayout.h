@@ -31,6 +31,12 @@ public:
 	static const int32 INDUSTRIAL = 3;
 	static const int32 YARD = 4;
 
+	// Building Direction
+	static const int32 LEFT = 1;
+	static const int32 TOP = 2;
+	static const int32 RIGHT = 3;
+	static const int32 BOTTOM = 4;
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
     int32 GridSize = 100;
 
@@ -44,71 +50,84 @@ public:
     int32 MinSeedDistance = 3;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	int32 InSeed = 42;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
 	int32 AdditionalRoadWidth = 1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
-	int32 InSeed = 42;
+	bool bUseMLCAValues = true;
 
-	// Cell size for visualization
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
-	float CellSize = 200.0f;
+	bool bOrganizedSeedPlacement = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DistrictWeight")
+	int32 ResidentialDistrictWeight = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DistrictWeight")
+	int32 CommercialDistrictWeight = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DistrictWeight")
+	int32 IndustrialDistrictWeight = 1;
+
+
 
 	// Residential building size
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
 	int32 minXSizeResidental = 5;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
 	int32 minYSizeResidental = 5;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
 	int32 maxXSizeResidental = 7;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
 	int32 maxYSizeResidental = 7;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
 	int32 minHeightResidential = 1;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
 	int32 maxHeightResidential = 3;
 
 	// Commercial building size
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
 	int32 minXSizeCommercial = 3;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
 	int32 minYSizeCommercial = 3;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
 	int32 maxXSizeCommercial = 5;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
 	int32 maxYSizeCommercial = 5;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
 	int32 minHeightCommercial = 8;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
 	int32 maxHeightCommercial = 15;
 
 
 	// Industrial building size
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
 	int32 minXSizeIndustrial = 8;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
 	int32 minYSizeIndustrial = 8;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
 	int32 maxXSizeIndustrial = 12;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
 	int32 maxYSizeIndustrial = 12;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
 	int32 minHeightIndustrial = 3;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
 	int32 maxHeightIndustrial = 5;
 
 	// Instanced Static Mesh Component for visualization
@@ -138,6 +157,10 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Visual")
 	UInstancedStaticMeshComponent* ISMBush;
+
+	// Cell size for visualization
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
+	float CellSize = 200.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Water")
 	int32 WaterSeedAmount = 10;
@@ -318,6 +341,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void CalculateRoadType();
+
+	UFUNCTION(BlueprintCallable)
+	void SetBuildingDirection();
 
 
 
