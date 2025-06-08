@@ -684,7 +684,16 @@ void ACA_CityLayout::UpdateISMToSpecificLayer(ELayerEnum LayerEnum)
                     InstancedGridMesh->SetCustomDataValue(Index, 1, Color.G);
                     InstancedGridMesh->SetCustomDataValue(Index, 2, Color.B);
                     InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
-                    InstancedGridMesh->SetCustomDataValue(Index, 4, 0.5);
+                    InstancedGridMesh->SetCustomDataValue(Index, 4, 1);
+                }
+                else
+                {
+                    // If no color is defined, use gray
+                    InstancedGridMesh->SetCustomDataValue(Index, 0, 0);
+                    InstancedGridMesh->SetCustomDataValue(Index, 1, 0);
+                    InstancedGridMesh->SetCustomDataValue(Index, 2, 0);
+                    InstancedGridMesh->SetCustomDataValue(Index, 3, 0);
+                    InstancedGridMesh->SetCustomDataValue(Index, 4, 1);
                 }
             }
         }
@@ -1027,36 +1036,73 @@ void ACA_CityLayout::VisualizeTheBlocks()
 
 void ACA_CityLayout::GrowDistricts(TArray<int32>& OutGrid)
 {
-    OutGrid = Grid;
-    for (int32 y = 0; y < GridSize; ++y)
-    {
-        for (int32 x = 0; x < GridSize; ++x)
+    if (bUseMooreNeighborhood) {
+        OutGrid = Grid;
+        for (int32 y = 0; y < GridSize; ++y)
         {
-            int32 Index = GetIndex(x, y);
-            if (Grid[Index] != EMPTY)
-                continue;
-
-            TArray<FIntPoint> Neighbors = GetMooreNeighbors(x, y);
-            TSet<int32> DistrictIDs;
-			int32 NeighborDistrictCount = 0;
-
-            for (const auto& N : Neighbors)
+            for (int32 x = 0; x < GridSize; ++x)
             {
-                int32 NeighborValue = Grid[GetIndex(N.X, N.Y)];
-                if (NeighborValue > 0)
+                int32 Index = GetIndex(x, y);
+                if (Grid[Index] != EMPTY)
+                    continue;
+
+                TArray<FIntPoint> Neighbors = GetMooreNeighbors(x, y);
+                TSet<int32> DistrictIDs;
+                int32 NeighborDistrictCount = 0;
+
+                for (const auto& N : Neighbors)
                 {
-                    DistrictIDs.Add(NeighborValue);
-					NeighborDistrictCount++;
+                    int32 NeighborValue = Grid[GetIndex(N.X, N.Y)];
+                    if (NeighborValue > 0)
+                    {
+                        DistrictIDs.Add(NeighborValue);
+                        NeighborDistrictCount++;
+                    }
+                }
+
+                if ((DistrictIDs.Num() == 1 && RNG.FRand() <= GrowthProb))
+                {
+                    OutGrid[Index] = DistrictIDs.Array()[0];
+                }
+                else if (DistrictIDs.Num() > 1)
+                {
+                    OutGrid[Index] = ROAD;
                 }
             }
+        }
+    }
+    else {
+        OutGrid = Grid;
+        for (int32 y = 0; y < GridSize; ++y)
+        {
+            for (int32 x = 0; x < GridSize; ++x)
+            {
+                int32 Index = GetIndex(x, y);
+                if (Grid[Index] != EMPTY)
+                    continue;
 
-            if ((DistrictIDs.Num() == 1 && RNG.FRand() <= GrowthProb))
-            {
-                OutGrid[Index] = DistrictIDs.Array()[0];
-            }
-            else if (DistrictIDs.Num() > 1)
-            {
-                OutGrid[Index] = ROAD;
+                TArray<FIntPoint> Neighbors = GetVonNeumannNeighbors(x, y);
+                TSet<int32> DistrictIDs;
+                int32 NeighborDistrictCount = 0;
+
+                for (const auto& N : Neighbors)
+                {
+                    int32 NeighborValue = Grid[GetIndex(N.X, N.Y)];
+                    if (NeighborValue > 0)
+                    {
+                        DistrictIDs.Add(NeighborValue);
+                        NeighborDistrictCount++;
+                    }
+                }
+
+                if ((DistrictIDs.Num() == 1 && RNG.FRand() <= GrowthProb))
+                {
+                    OutGrid[Index] = DistrictIDs.Array()[0];
+                }
+                else if (DistrictIDs.Num() > 1)
+                {
+                    OutGrid[Index] = ROAD;
+                }
             }
         }
     }
@@ -1862,7 +1908,12 @@ void ACA_CityLayout::Simulate()
 	int32 SameCount = 0;
     while (Grid.Contains(EMPTY))
     {
-        GrowDistricts(NewGrid);
+        if (bSynchronousUpdate) {
+            GrowDistricts(NewGrid);
+        }
+		else {
+			GrowDistricts(Grid);
+		}
         if (NewGrid == Grid)
 			SameCount++;
         if (SameCount > 10) {
@@ -1870,7 +1921,10 @@ void ACA_CityLayout::Simulate()
             //UE_LOG(LogTemp, Warning, TEXT("City Layout Simulation Iterations: %d"), Iterations);
             break;
         }
-        Grid = NewGrid;
+        if (bSynchronousUpdate) {
+            Grid = NewGrid;
+        }
+        
         Iterations++;
     }
 

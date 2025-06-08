@@ -61,6 +61,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
 	bool bOrganizedSeedPlacement = true;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	bool bSynchronousUpdate = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	bool bUseMooreNeighborhood = true;
+
+	//District Weights
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DistrictWeight")
 	int32 ResidentialDistrictWeight = 1;
 
@@ -273,6 +280,12 @@ public:
     UFUNCTION(BlueprintCallable, CallInEditor)
     void VisualizeGrid();
 
+	UFUNCTION(BlueprintCallable)
+	void AddRoads(TArray<int32>& GridRef);
+
+	UFUNCTION(BlueprintCallable)
+	void PatchEmptyCells();
+
     UFUNCTION(BlueprintCallable)
     void TrimRoads();
 
@@ -366,10 +379,6 @@ protected:
     void PlaceSeeds();
 
     void GrowDistricts(TArray<int32>& OutGrid);
-
-    void AddRoads(TArray<int32>& GridRef);
-
-	void PatchEmptyCells();
 
 	TArray<FIntPoint> GetVonNeumannNeighborsWithinRadius(int32 StartX, int32 StartY, int32 Radius) const;
 
