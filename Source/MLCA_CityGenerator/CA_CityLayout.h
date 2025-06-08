@@ -29,7 +29,7 @@ public:
 	static const int32 RESIDENTIAL = 1;
 	static const int32 COMMERCIAL = 2;
 	static const int32 INDUSTRIAL = 3;
-	static const int32 YARD = 4;
+	static const int32 URBAN_FOREST = 4;
 
 	// Building Direction
 	static const int32 LEFT = 1;
@@ -76,6 +76,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DistrictWeight")
 	int32 IndustrialDistrictWeight = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DistrictWeight")
+	int32 UrbanForestDistrictWeight = 1;
 
 
 
@@ -193,29 +196,96 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RoadAccess")
 	int32 MinRoadAccessDistance = 3;
 
-	// Thresholds for each layer
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Threshold")
-	int32 WaterThreshold = 0;
+	// Residential Thresholds for each layer
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ResidentialThreshold")
+	int32 ResidentialWaterThreshold = 0;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Threshold")
-	int32 ElectricityThreshold = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ResidentialThreshold")
+	int32 ResidentialElectricityThreshold = 0;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Threshold")
-	int32 PopulationSatisfactionThreshold = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ResidentialThreshold")
+	int32 ResidentialPopulationSatisfactionThreshold = 0;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Threshold")
-	int32 PolutionThreshold = 100;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ResidentialThreshold")
+	int32 ResidentialPolutionThreshold = 100;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Threshold")
-	int32 PopulationDensityThreshold = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ResidentialThreshold")
+	int32 ResidentialPopulationDensityThreshold = 0;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Threshold")
-	int32 RoadAccessibilityThreshold = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ResidentialThreshold")
+	int32 ResidentialRoadAccessibilityThreshold = 0;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Threshold")
-	int32 SecurityThreshold = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ResidentialThreshold")
+	int32 ResidentialSecurityThreshold = 0;
+
+	// Commercial Thresholds for each layer
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CommercialThreshold")
+	int32 CommercialWaterThreshold = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CommercialThreshold")
+	int32 CommercialElectricityThreshold = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CommercialThreshold")
+	int32 CommercialPopulationSatisfactionThreshold = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CommercialThreshold")
+	int32 CommercialPolutionThreshold = 100;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CommercialThreshold")
+	int32 CommercialPopulationDensityThreshold = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CommercialThreshold")
+	int32 CommercialRoadAccessibilityThreshold = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CommercialThreshold")
+	int32 CommercialSecurityThreshold = 0;
+
+	// Industrial Thresholds for each layer
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "IndustrialThreshold")
+	int32 IndustrialWaterThreshold = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "IndustrialThreshold")
+	int32 IndustrialElectricityThreshold = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "IndustrialThreshold")
+	int32 IndustrialPopulationSatisfactionThreshold = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "IndustrialThreshold")
+	int32 IndustrialPolutionThreshold = 100;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "IndustrialThreshold")
+	int32 IndustrialPopulationDensityThreshold = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "IndustrialThreshold")
+	int32 IndustrialRoadAccessibilityThreshold = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "IndustrialThreshold")
+	int32 IndustrialSecurityThreshold = 0;
+
+	// UrbanForest Thresholds for each layer
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UrbanForestThreshold")
+	int32 UrbanForestWaterThreshold = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UrbanForestThreshold")
+	int32 UrbanForestElectricityThreshold = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UrbanForestThreshold")
+	int32 UrbanForestPopulationSatisfactionThreshold = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UrbanForestThreshold")
+	int32 UrbanForestPolutionThreshold = 100;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UrbanForestThreshold")
+	int32 UrbanForestPopulationDensityThreshold = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UrbanForestThreshold")
+	int32 UrbanForestRoadAccessibilityThreshold = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UrbanForestThreshold")
+	int32 UrbanForestSecurityThreshold = 0;
 
 
+	
 	// Utility
 	UPROPERTY(BlueprintReadOnly)
 	int32 Iterations = 0;

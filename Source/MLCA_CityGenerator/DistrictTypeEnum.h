@@ -9,5 +9,6 @@ enum class EDistrictTypeEnum : uint8
 	Empty UMETA(DisplayName = "Empty"),
 	Residential UMETA(DisplayName = "Residential"),
 	Commercial UMETA(DisplayName = "Commercial"),
-	Industrial UMETA(DisplayName = "Industrial")
+	Industrial UMETA(DisplayName = "Industrial"),
+	UrbanForest UMETA(DisplayName = "UrbanForest"),
 };

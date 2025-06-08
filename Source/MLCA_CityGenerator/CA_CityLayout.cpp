@@ -489,6 +489,13 @@ void ACA_CityLayout::UpdateISMToSpecificLayer(ELayerEnum LayerEnum)
                     InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
                     InstancedGridMesh->SetCustomDataValue(Index, 4, 0.5);
 				}
+                else if (DistrictLayerGrid[Index] == URBAN_FOREST) {
+                    InstancedGridMesh->SetCustomDataValue(Index, 0, RedColor.R);
+                    InstancedGridMesh->SetCustomDataValue(Index, 1, RedColor.G);
+                    InstancedGridMesh->SetCustomDataValue(Index, 2, RedColor.B);
+                    InstancedGridMesh->SetCustomDataValue(Index, 3, 1);
+                    InstancedGridMesh->SetCustomDataValue(Index, 4, 0.5);
+                }
 				else if (DistrictLayerGrid[Index] == EMPTY) {
 					InstancedGridMesh->SetCustomDataValue(Index, 0, GrayColor.R);
 					InstancedGridMesh->SetCustomDataValue(Index, 1, GrayColor.G);
@@ -832,7 +839,7 @@ void ACA_CityLayout::CalculateDistrictType()
 
             float MaxValue = DistrictArray[i].DistrictCellIndex.Num() * 100;
 
-            // Loop for each cell index in the DistrictCellIndex
+			// Loop for each cell index in the DistrictCellIndex to calculate the values
             for (int32 j = 0; j < DistrictArray[i].DistrictCellIndex.Num(); ++j)
             {
                 WaterValue += WaterLayerGrid[DistrictArray[i].DistrictCellIndex[j]];
@@ -842,29 +849,147 @@ void ACA_CityLayout::CalculateDistrictType()
                 PopulationDensityValue += PopulationDensityLayerGrid[DistrictArray[i].DistrictCellIndex[j]];
                 RoadAccessibilityValue += RoadAccessibilityLayerGrid[DistrictArray[i].DistrictCellIndex[j]];
                 SecurityValue += SecurityLayerGrid[DistrictArray[i].DistrictCellIndex[j]];
-
-                if (WaterValue >= MaxValue * WaterThreshold / 100) {
-                    bIsEnoughWater = true;
-                }
-                if (ElectricityValue >= MaxValue * ElectricityThreshold / 100) {
-                    bIsEnoughElectricity = true;
-                }
-                if (PopulationSatisfactionValue >= MaxValue * PopulationSatisfactionThreshold / 100) {
-                    bIsEnoughPopulationSatisfaction = true;
-                }
-                if (PolutionValue < MaxValue * PolutionThreshold / 100) {
-                    bIsEnoughPolution = true;
-                }
-                if (PopulationDensityValue >= MaxValue * PopulationDensityThreshold / 100) {
-                    bIsEnoughPopulationDensity = true;
-                }
-                if (RoadAccessibilityValue >= MaxValue * RoadAccessibilityThreshold / 100) {
-                    bIsEnoughRoadAccessibility = true;
-                }
-                if (SecurityValue >= MaxValue * SecurityThreshold / 100) {
-                    bIsEnoughSecurity = true;
-                }
             }
+			// Calculate the availability values based on the thresholds
+            if (WaterValue >= MaxValue * ResidentialWaterThreshold / 100) {
+                bIsEnoughWater = true;
+            }
+            if (ElectricityValue >= MaxValue * ResidentialElectricityThreshold / 100) {
+                bIsEnoughElectricity = true;
+            }
+            if (PopulationSatisfactionValue >= MaxValue * ResidentialPopulationSatisfactionThreshold / 100) {
+                bIsEnoughPopulationSatisfaction = true;
+            }
+            if (PolutionValue < MaxValue * ResidentialPolutionThreshold / 100) {
+                bIsEnoughPolution = true;
+            }
+            if (PopulationDensityValue >= MaxValue * ResidentialPopulationDensityThreshold / 100) {
+                bIsEnoughPopulationDensity = true;
+            }
+            if (RoadAccessibilityValue >= MaxValue * ResidentialRoadAccessibilityThreshold / 100) {
+                bIsEnoughRoadAccessibility = true;
+            }
+            if (SecurityValue >= MaxValue * ResidentialSecurityThreshold / 100) {
+                bIsEnoughSecurity = true;
+            }
+			// If all conditions are met, add the Residential type to AvailableDistrictType
+            if (bIsEnoughWater && bIsEnoughElectricity && bIsEnoughPopulationSatisfaction && bIsEnoughPolution && bIsEnoughSecurity)
+            {
+                DistrictArray[i].AvailableDistrictType.AddUnique(RESIDENTIAL);
+            }
+
+			// Reset the flags for the next district type checks
+            bIsEnoughWater = false;
+            bIsEnoughElectricity = false;
+            bIsEnoughPopulationSatisfaction = false;
+            bIsEnoughPolution = false;
+            bIsEnoughPopulationDensity = false;
+            bIsEnoughRoadAccessibility = false;
+            bIsEnoughSecurity = false;
+
+			// Check for Commercial types
+			if (WaterValue >= MaxValue * CommercialWaterThreshold / 100) {
+				bIsEnoughWater = true;
+			}
+			if (ElectricityValue >= MaxValue * CommercialElectricityThreshold / 100) {
+				bIsEnoughElectricity = true;
+			}
+			if (PopulationSatisfactionValue >= MaxValue * CommercialPopulationSatisfactionThreshold / 100) {
+				bIsEnoughPopulationSatisfaction = true;
+			}
+			if (PolutionValue < MaxValue * CommercialPolutionThreshold / 100) {
+				bIsEnoughPolution = true;
+			}
+			if (PopulationDensityValue >= MaxValue * CommercialPopulationDensityThreshold / 100) {
+				bIsEnoughPopulationDensity = true;
+			}
+			if (RoadAccessibilityValue >= MaxValue * CommercialRoadAccessibilityThreshold / 100) {
+				bIsEnoughRoadAccessibility = true;
+			}
+			if (SecurityValue >= MaxValue * CommercialSecurityThreshold / 100) {
+				bIsEnoughSecurity = true;
+			}
+			// If all conditions are met, add the Commercial type to AvailableDistrictType
+            if (bIsEnoughWater && bIsEnoughElectricity && bIsEnoughPopulationDensity && bIsEnoughRoadAccessibility && bIsEnoughSecurity)
+            {
+                DistrictArray[i].AvailableDistrictType.AddUnique(COMMERCIAL);
+            }
+			
+            // Reset the flags for the next district type checks
+            bIsEnoughWater = false;
+            bIsEnoughElectricity = false;
+            bIsEnoughPopulationSatisfaction = false;
+            bIsEnoughPolution = false;
+            bIsEnoughPopulationDensity = false;
+            bIsEnoughRoadAccessibility = false;
+            bIsEnoughSecurity = false;
+
+			// Check for Industrial types
+			if (WaterValue >= MaxValue * IndustrialWaterThreshold / 100) {
+				bIsEnoughWater = true;
+			}
+			if (ElectricityValue >= MaxValue * IndustrialElectricityThreshold / 100) {
+				bIsEnoughElectricity = true;
+			}
+			if (PopulationSatisfactionValue >= MaxValue * IndustrialPopulationSatisfactionThreshold / 100) {
+				bIsEnoughPopulationSatisfaction = true;
+			}
+			if (PolutionValue < MaxValue * IndustrialPolutionThreshold / 100) {
+				bIsEnoughPolution = true;
+			}
+			if (PopulationDensityValue >= MaxValue * IndustrialPopulationDensityThreshold / 100) {
+				bIsEnoughPopulationDensity = true;
+			}
+			if (RoadAccessibilityValue >= MaxValue * IndustrialRoadAccessibilityThreshold / 100) {
+				bIsEnoughRoadAccessibility = true;
+			}
+			if (SecurityValue >= MaxValue * IndustrialSecurityThreshold / 100) {
+				bIsEnoughSecurity = true;
+			}
+			// If all conditions are met, add the Industrial type to AvailableDistrictType
+            if (bIsEnoughWater && bIsEnoughElectricity && bIsEnoughRoadAccessibility && bIsEnoughPolution)
+            {
+                DistrictArray[i].AvailableDistrictType.AddUnique(INDUSTRIAL);
+            }
+
+            bIsEnoughWater = false;
+            bIsEnoughElectricity = false;
+            bIsEnoughPopulationSatisfaction = false;
+            bIsEnoughPolution = false;
+            bIsEnoughPopulationDensity = false;
+            bIsEnoughRoadAccessibility = false;
+            bIsEnoughSecurity = false;
+
+            // Check for UrbanForest types
+			if (WaterValue >= MaxValue * UrbanForestWaterThreshold / 100) {
+				bIsEnoughWater = true;
+			}
+			if (ElectricityValue >= MaxValue * UrbanForestElectricityThreshold / 100) {
+				bIsEnoughElectricity = true;
+			}
+			if (PopulationSatisfactionValue >= MaxValue * UrbanForestPopulationSatisfactionThreshold / 100) {
+				bIsEnoughPopulationSatisfaction = true;
+			}
+			if (PolutionValue < MaxValue * UrbanForestPolutionThreshold / 100) {
+				bIsEnoughPolution = true;
+			}
+			if (PopulationDensityValue >= MaxValue * UrbanForestPopulationDensityThreshold / 100) {
+				bIsEnoughPopulationDensity = true;
+			}
+			if (RoadAccessibilityValue >= MaxValue * UrbanForestRoadAccessibilityThreshold / 100) {
+				bIsEnoughRoadAccessibility = true;
+			}
+			if (SecurityValue >= MaxValue * UrbanForestSecurityThreshold / 100) {
+				bIsEnoughSecurity = true;
+			}
+			// If all conditions are met, add the UrbanForest type to AvailableDistrictType
+			if (bIsEnoughWater && bIsEnoughElectricity && bIsEnoughPopulationSatisfaction && bIsEnoughPolution && bIsEnoughPopulationDensity && bIsEnoughRoadAccessibility && bIsEnoughSecurity)
+			{
+				DistrictArray[i].AvailableDistrictType.AddUnique(URBAN_FOREST);
+			}
+
+			
+            
             DistrictArray[i].WaterAvailValue = (WaterValue / MaxValue);
             DistrictArray[i].ElectricityAvailValue = (ElectricityValue / MaxValue);
             DistrictArray[i].PopulationSatisfactionValue = (PopulationSatisfactionValue / MaxValue);
@@ -873,18 +998,9 @@ void ACA_CityLayout::CalculateDistrictType()
             DistrictArray[i].RoadAccessibilityValue = (RoadAccessibilityValue / MaxValue);
             DistrictArray[i].SecurityValue = (SecurityValue / MaxValue);
 
-            if (bIsEnoughWater && bIsEnoughElectricity && bIsEnoughPopulationSatisfaction && bIsEnoughPolution && bIsEnoughSecurity)
-            {
-                DistrictArray[i].AvailableDistrictType.AddUnique(RESIDENTIAL);
-            }
-            if (bIsEnoughWater && bIsEnoughElectricity && bIsEnoughPopulationDensity && bIsEnoughRoadAccessibility && bIsEnoughSecurity)
-            {
-                DistrictArray[i].AvailableDistrictType.AddUnique(COMMERCIAL);
-            }
-            if (bIsEnoughWater && bIsEnoughElectricity && bIsEnoughRoadAccessibility && bIsEnoughPolution)
-            {
-                DistrictArray[i].AvailableDistrictType.AddUnique(INDUSTRIAL);
-            }
+            
+            
+            
             // Randomly assign the DistrictType with AvailableDistrictType
             if (DistrictArray[i].AvailableDistrictType.Num() > 0)
             {
@@ -904,24 +1020,106 @@ void ACA_CityLayout::CalculateDistrictType()
     }
     // Use District Weight to Choose District Type
     else {
-		int32 TotalDistrictWeight = ResidentialDistrictWeight + CommercialDistrictWeight + IndustrialDistrictWeight;
+		int32 TotalDistrictWeight = ResidentialDistrictWeight + CommercialDistrictWeight + IndustrialDistrictWeight + UrbanForestDistrictWeight;
+
+
+		float IdealResidentialDistrictCount = (ResidentialDistrictWeight / static_cast<float>(TotalDistrictWeight)) * NumDistricts;
+        
+		int ResidentialDistrictCount = FMath::RoundToInt(IdealResidentialDistrictCount);
+
+		// Get IdealResidentialDistrictCount decimal part
+		float ResidentialDistrictDecimalPart = IdealResidentialDistrictCount - ResidentialDistrictCount;
+
+		float IdealCommercialDistrictCount = (CommercialDistrictWeight / static_cast<float>(TotalDistrictWeight)) * NumDistricts;
+
+		int CommercialDistrictCount = FMath::RoundToInt(IdealCommercialDistrictCount);
+
+		// Get IdealCommercialDistrictCount decimal part
+		float CommercialDistrictDecimalPart = IdealCommercialDistrictCount - CommercialDistrictCount;
+
+		float IdealIndustrialDistrictCount = (IndustrialDistrictWeight / static_cast<float>(TotalDistrictWeight)) * NumDistricts;
+
+		int IndustrialDistrictCount = FMath::RoundToInt(IdealIndustrialDistrictCount);
+
+		// Get IdealIndustrialDistrictCount decimal part
+		float IndustrialDistrictDecimalPart = IdealIndustrialDistrictCount - IndustrialDistrictCount;
+
+		float IdealUrbanForestDistrictCount = (UrbanForestDistrictWeight / static_cast<float>(TotalDistrictWeight)) * NumDistricts;
+
+		int UrbanForestDistrictCount = FMath::RoundToInt(IdealUrbanForestDistrictCount);
+
+		// Get IdealUrbanForestDistrictCount decimal part
+		float UrbanForestDistrictDecimalPart = IdealUrbanForestDistrictCount - UrbanForestDistrictCount;
+
+        while (ResidentialDistrictCount + CommercialDistrictCount + IndustrialDistrictCount + UrbanForestDistrictCount < DistrictArray.Num())
+        {
+			// If ResidentialDistrictDeciamlPart is greater than other decimal parts, add 1 to ResidentialDistrictCount
+            if (ResidentialDistrictDecimalPart >= CommercialDistrictDecimalPart && ResidentialDistrictDecimalPart >= IndustrialDistrictDecimalPart && ResidentialDistrictDecimalPart >= UrbanForestDistrictDecimalPart) {
+				ResidentialDistrictCount++;
+				ResidentialDistrictDecimalPart -= 1.0f;
+            }
+			// If CommercialDistrictDeciamlPart is greater than other decimal parts, add 1 to CommercialDistrictCount
+            else if (CommercialDistrictDecimalPart >= ResidentialDistrictDecimalPart && CommercialDistrictDecimalPart >= IndustrialDistrictDecimalPart && CommercialDistrictDecimalPart >= UrbanForestDistrictDecimalPart) {
+                CommercialDistrictCount++;
+				CommercialDistrictDecimalPart -= 1.0f;
+            }
+			// If IndustrialDistrictDeciamlPart is greater than other decimal parts, add 1 to IndustrialDistrictCount
+            else if (IndustrialDistrictDecimalPart >= ResidentialDistrictDecimalPart && IndustrialDistrictDecimalPart >= CommercialDistrictDecimalPart && IndustrialDistrictDecimalPart >= UrbanForestDistrictDecimalPart) {
+                IndustrialDistrictCount++;
+				IndustrialDistrictDecimalPart -= 1.0f;
+            }
+			// If UrbanForestDistrictDeciamlPart is greater than other decimal parts, add 1 to UrbanForestDistrictCount
+			else if (UrbanForestDistrictDecimalPart >= ResidentialDistrictDecimalPart && UrbanForestDistrictDecimalPart >= CommercialDistrictDecimalPart && UrbanForestDistrictDecimalPart >= IndustrialDistrictDecimalPart) {
+				UrbanForestDistrictCount++;
+				UrbanForestDistrictDecimalPart -= 1.0f;
+			}
+        }
+        TArray<int32> DistrictPool;
+
+		// Fill the DistrictPool with the DistrictType based on the count
+		for (int32 i = 0; i < ResidentialDistrictCount; ++i) {
+			DistrictPool.Add(RESIDENTIAL);
+		}
+		for (int32 i = 0; i < CommercialDistrictCount; ++i) {
+			DistrictPool.Add(COMMERCIAL);
+		}
+		for (int32 i = 0; i < IndustrialDistrictCount; ++i) {
+			DistrictPool.Add(INDUSTRIAL);
+		}
+		for (int32 i = 0; i < UrbanForestDistrictCount; ++i) {
+			DistrictPool.Add(URBAN_FOREST);
+		}
+
 		for (int32 i = 0; i < DistrictArray.Num(); ++i)
 		{
 
-			// Get the DistrictType from the DistrictWeight
-			int32 DistrictType = FMath::RandRange(1, TotalDistrictWeight);
-            if (DistrictType <= ResidentialDistrictWeight) {
-				DistrictArray[i].DistrictType = RESIDENTIAL;
-            }
-			else if (DistrictType <= ResidentialDistrictWeight + CommercialDistrictWeight) {
-				DistrictArray[i].DistrictType = COMMERCIAL;
-			}
-			else if (DistrictType <= ResidentialDistrictWeight + CommercialDistrictWeight + IndustrialDistrictWeight) {
-				DistrictArray[i].DistrictType = INDUSTRIAL;
-			}
-			else {
-				DistrictArray[i].DistrictType = EMPTY;
-			}
+			//// Get the DistrictType from the DistrictWeight
+			//int32 DistrictType = FMath::RandRange(1, TotalDistrictWeight);
+   //         if (DistrictType <= ResidentialDistrictWeight) {
+			//	DistrictArray[i].DistrictType = RESIDENTIAL;
+   //         }
+			//else if (DistrictType <= ResidentialDistrictWeight + CommercialDistrictWeight) {
+			//	DistrictArray[i].DistrictType = COMMERCIAL;
+			//}
+			//else if (DistrictType <= ResidentialDistrictWeight + CommercialDistrictWeight + IndustrialDistrictWeight) {
+			//	DistrictArray[i].DistrictType = INDUSTRIAL;
+			//}
+			//else if (DistrictType <= ResidentialDistrictWeight + CommercialDistrictWeight + IndustrialDistrictWeight + UrbanForestDistrictWeight) {
+			//	DistrictArray[i].DistrictType = URBAN_FOREST;
+			//}
+			//else {
+			//	DistrictArray[i].DistrictType = EMPTY;
+			//}
+            
+
+
+			// Randomly assign the DistrictType from the DistrictPool
+			int32 RandomIndex = FMath::RandRange(0, DistrictPool.Num() - 1);
+			DistrictArray[i].DistrictType = DistrictPool[RandomIndex];
+			DistrictPool.RemoveAt(RandomIndex);
+			DistrictArray[i].DistrictID = i + 1; // Set DistrictID to i + 1
+
+
 			// Set the DistrictLayerGrid to the DistrictType
 			for (int32 j = 0; j < DistrictArray[i].DistrictCellIndex.Num(); ++j)
 			{
@@ -1322,7 +1520,7 @@ void ACA_CityLayout::SetBuildingLayerGridValues()
 					// BlockIndex is in the same row or column as the edge cells
                     //if (BlockIndex / GridSize == MinRow || BlockIndex / GridSize == MaxRow || BlockIndex % GridSize == MinCol || BlockIndex % GridSize == MaxCol) {
                         // Set the TileLayerArray to YARD
-						TileLayerArray[BlockIndex] = YARD;
+						TileLayerArray[BlockIndex] = URBAN_FOREST;
 						FTransform InstanceTransform;
                         InstancedGridMesh->GetInstanceTransform(BlockIndex, InstanceTransform, true);
 						InstanceTransform.AddToTranslation(FVector(0, 0, 15)); // Adjust height for visibility
