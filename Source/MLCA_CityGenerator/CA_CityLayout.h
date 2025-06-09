@@ -473,6 +473,8 @@ protected:
 	void InitializeRoadAccessibilityLayerGridValues();
 
 	void InitializeSecurityLayerGridValues();
+		
+	void InitializeBuildingLayerGridValues();
 
 	void DoBSP_Grid(int32 X, int32 Y, int32 Width, int32 Height, int32& NextID, TArray<int32>& BlockIndex, int DistrictType);
 

@@ -415,6 +415,7 @@ void ACA_CityLayout::InitializeLayerValues()
     InitializePopulationDensityLayerGridValues();
     InitializeRoadAccessibilityLayerGridValues();
     InitializeSecurityLayerGridValues();
+	InitializeBuildingLayerGridValues();
 }
 
 void ACA_CityLayout::UpdateISMToSpecificLayer(ELayerEnum LayerEnum)
@@ -719,29 +720,32 @@ void ACA_CityLayout::AddBuildingEffects(EBuildingTypeEnum BuildingType, int32 Ti
 	{
 	case EBuildingTypeEnum::WaterTower:
 		// Add water tower effects
-        WaterLayerGrid[GetIndex(TileLocationX, TileLocationY)] = FMath::Clamp(WaterLayerGrid[GetIndex(TileLocationX, TileLocationY)] + 50, 0, 100);
+        WaterLayerGrid[GetIndex(TileLocationX, TileLocationY)] = FMath::Clamp(WaterLayerGrid[GetIndex(TileLocationX, TileLocationY)] + 100, 0, 100);
         Neighbors = GetVonNeumannNeighborsWithinRadius(TileLocationX, TileLocationY, WaterSpreadDistance);
         // for each Neighbors add the waterlayergrid value with 50 and clamp the value to 100
         for (const auto& N : Neighbors)
         {
             // Add the WaterLayerGrid on that index with 50 and Clamp the value to 100
-            WaterLayerGrid[GetIndex(N.X, N.Y)] = FMath::Clamp(WaterLayerGrid[GetIndex(N.X, N.Y)] + 50, 0, 100);
+            WaterLayerGrid[GetIndex(N.X, N.Y)] = FMath::Clamp(WaterLayerGrid[GetIndex(N.X, N.Y)] + 100, 0, 100);
         }
+        BuildingLayerArray[GetIndex(TileLocationX, TileLocationY)] = 1;
+
 		break;
 	case EBuildingTypeEnum::ElectricityTower:
 		// Add Electricity Tower effects
-        ElectricityLayerGrid[GetIndex(TileLocationX, TileLocationY)] = FMath::Clamp(ElectricityLayerGrid[GetIndex(TileLocationX, TileLocationY)] + 50, 0, 100);
+        ElectricityLayerGrid[GetIndex(TileLocationX, TileLocationY)] = FMath::Clamp(ElectricityLayerGrid[GetIndex(TileLocationX, TileLocationY)] + 100, 0, 100);
         Neighbors = GetMooreNeighborsWithinRadius(TileLocationX, TileLocationY, ElectricitySpreadDistance);
         // for each Neighbors add the ElectricityLayerGrid value with 50 and clamp the value to 100
         for (const auto& N : Neighbors)
         {
             // Add the WaterLayerGrid on that index with 50 and Clamp the value to 100
-            ElectricityLayerGrid[GetIndex(N.X, N.Y)] = FMath::Clamp(ElectricityLayerGrid[GetIndex(N.X, N.Y)] + 50, 0, 100);
+            ElectricityLayerGrid[GetIndex(N.X, N.Y)] = FMath::Clamp(ElectricityLayerGrid[GetIndex(N.X, N.Y)] + 100, 0, 100);
         }
+        BuildingLayerArray[GetIndex(TileLocationX, TileLocationY)] = 2;
 		break;
 	case EBuildingTypeEnum::School:
         // Add School  effects
-        PopulationSatisfactionLayerGrid[GetIndex(TileLocationX, TileLocationY)] = FMath::Clamp(PopulationSatisfactionLayerGrid[GetIndex(TileLocationX, TileLocationY)] + 30, 0, 100);
+        PopulationSatisfactionLayerGrid[GetIndex(TileLocationX, TileLocationY)] = FMath::Clamp(PopulationSatisfactionLayerGrid[GetIndex(TileLocationX, TileLocationY)] + 100, 0, 100);
         for (int32 X = TileLocationX; X <= TileLocationX + 5; ++X) {
 			for (int32 Y = TileLocationY; Y <= TileLocationY + 3; ++Y) {
 				TArray<FIntPoint> TempNeighbors = GetMooreNeighborsWithinRadius(X, Y, SchoolSpreadDistance);
@@ -753,18 +757,19 @@ void ACA_CityLayout::AddBuildingEffects(EBuildingTypeEnum BuildingType, int32 Ti
 						Neighbors.AddUnique(N);
 					}
 				}
+                BuildingLayerArray[GetIndex(X, Y)] = 3;
 			}
         }
         // for each Neighbors add the PopulationSatisfactionLayerGrid value with 50 and clamp the value to 100
         for (const auto& N : Neighbors)
         {
             // Add the PopulationSatisfactionLayerGrid on that index with 50 and Clamp the value to 100
-            PopulationSatisfactionLayerGrid[GetIndex(N.X, N.Y)] = FMath::Clamp(PopulationSatisfactionLayerGrid[GetIndex(N.X, N.Y)] + 30, 0, 100);
+            PopulationSatisfactionLayerGrid[GetIndex(N.X, N.Y)] = FMath::Clamp(PopulationSatisfactionLayerGrid[GetIndex(N.X, N.Y)] + 100, 0, 100);
         }
         break;
     case EBuildingTypeEnum::Park:
         // Add Park effects
-        PolutionLayerGrid[GetIndex(TileLocationX, TileLocationY)] = FMath::Clamp(PolutionLayerGrid[GetIndex(TileLocationX, TileLocationY)] - 50, 0, 100);
+        PolutionLayerGrid[GetIndex(TileLocationX, TileLocationY)] = FMath::Clamp(PolutionLayerGrid[GetIndex(TileLocationX, TileLocationY)] - 100, 0, 100);
         for (int32 X = TileLocationX; X <= TileLocationX + 3; ++X) {
             for (int32 Y = TileLocationY; Y <= TileLocationY + 2; ++Y) {
                 TArray<FIntPoint> TempNeighbors = GetMooreNeighborsWithinRadius(X, Y, ParkSpreadDistance);
@@ -776,18 +781,19 @@ void ACA_CityLayout::AddBuildingEffects(EBuildingTypeEnum BuildingType, int32 Ti
                         Neighbors.AddUnique(N);
                     }
                 }
+                BuildingLayerArray[GetIndex(X, Y)] = 4;
             }
         }
         // for each Neighbors add the PopulationSatisfactionLayerGrid value with 50 and clamp the value to 100
         for (const auto& N : Neighbors)
         {
             // Add the PopulationSatisfactionLayerGrid on that index with 50 and Clamp the value to 100
-			PolutionLayerGrid[GetIndex(N.X, N.Y)] = FMath::Clamp(PolutionLayerGrid[GetIndex(N.X, N.Y)] - 50, 0, 100);
+			PolutionLayerGrid[GetIndex(N.X, N.Y)] = FMath::Clamp(PolutionLayerGrid[GetIndex(N.X, N.Y)] - 100, 0, 100);
         }
         break;
     case EBuildingTypeEnum::PoliceStation:
         // Add Police Station effects
-        SecurityLayerGrid[GetIndex(TileLocationX, TileLocationY)] = FMath::Clamp(SecurityLayerGrid[GetIndex(TileLocationX, TileLocationY)] + 50, 0, 100);
+        SecurityLayerGrid[GetIndex(TileLocationX, TileLocationY)] = FMath::Clamp(SecurityLayerGrid[GetIndex(TileLocationX, TileLocationY)] + 100, 0, 100);
         for (int32 X = TileLocationX; X <= TileLocationX + 3; ++X) {
             for (int32 Y = TileLocationY; Y <= TileLocationY + 2; ++Y) {
                 TArray<FIntPoint> TempNeighbors = GetMooreNeighborsWithinRadius(X, Y, PoliceStationSpreadDistance);
@@ -799,13 +805,14 @@ void ACA_CityLayout::AddBuildingEffects(EBuildingTypeEnum BuildingType, int32 Ti
                         Neighbors.AddUnique(N);
                     }
                 }
+				BuildingLayerArray[GetIndex(X, Y)] = 5;
             }
         }
         // for each Neighbors add the PopulationSatisfactionLayerGrid value with 50 and clamp the value to 100
         for (const auto& N : Neighbors)
         {
             // Add the PopulationSatisfactionLayerGrid on that index with 50 and Clamp the value to 100
-            SecurityLayerGrid[GetIndex(N.X, N.Y)] = FMath::Clamp(SecurityLayerGrid[GetIndex(N.X, N.Y)] + 50, 0, 100);
+            SecurityLayerGrid[GetIndex(N.X, N.Y)] = FMath::Clamp(SecurityLayerGrid[GetIndex(N.X, N.Y)] + 100, 0, 100);
         }
         break;
 	default:
@@ -1092,24 +1099,6 @@ void ACA_CityLayout::CalculateDistrictType()
 
 		for (int32 i = 0; i < DistrictArray.Num(); ++i)
 		{
-
-			//// Get the DistrictType from the DistrictWeight
-			//int32 DistrictType = FMath::RandRange(1, TotalDistrictWeight);
-   //         if (DistrictType <= ResidentialDistrictWeight) {
-			//	DistrictArray[i].DistrictType = RESIDENTIAL;
-   //         }
-			//else if (DistrictType <= ResidentialDistrictWeight + CommercialDistrictWeight) {
-			//	DistrictArray[i].DistrictType = COMMERCIAL;
-			//}
-			//else if (DistrictType <= ResidentialDistrictWeight + CommercialDistrictWeight + IndustrialDistrictWeight) {
-			//	DistrictArray[i].DistrictType = INDUSTRIAL;
-			//}
-			//else if (DistrictType <= ResidentialDistrictWeight + CommercialDistrictWeight + IndustrialDistrictWeight + UrbanForestDistrictWeight) {
-			//	DistrictArray[i].DistrictType = URBAN_FOREST;
-			//}
-			//else {
-			//	DistrictArray[i].DistrictType = EMPTY;
-			//}
             
 
 
@@ -1491,6 +1480,22 @@ void ACA_CityLayout::GetAllLargestRectanglesForDistricts() {
 		// for each loop BlockCellArray
 		for (int32 j = 0; j < DistrictArray[i].BlockCellArray.Num(); ++j)
 		{
+			bool bIsBlockValid = true;
+            // Check if the BlockArray Cell has no buildings on it
+			for (int32 Cell : DistrictArray[i].BlockCellArray[j].BlockArray)
+			{
+				if (BuildingLayerArray[Cell] != 0) {
+					// If there is a building on the cell, skip this block
+					bIsBlockValid = false;
+					continue;
+				}
+			}
+            if (!bIsBlockValid) {
+				// Remove the block from the BlockCellArray
+				DistrictArray[i].BlockCellArray.RemoveAt(j);
+                continue; // Skip if the block is not valid
+            }
+                
 			FindLargestRectangle(DistrictArray[i].BlockCellArray[j].BlockArray, DistrictArray[i].BlockCellArray[j].SizeX, DistrictArray[i].BlockCellArray[j].SizeY, DistrictArray[i].DistrictType);
 
 		}
@@ -1626,6 +1631,7 @@ void ACA_CityLayout::CalculateTileLayerGridValues()
 {
 	// Initialize the TileLayerGrid with EMPTY values
 	TileLayerArray.Init(EMPTY, GridSize * GridSize);
+	ISMTile->ClearInstances(); // Clear previous instances
 	// Set the TileLayerGrid to the same values as the main grid
 	for (int32 y = 0; y < GridSize; ++y)
 	{
@@ -1855,6 +1861,11 @@ void ACA_CityLayout::InitializeRoadAccessibilityLayerGridValues()
 void ACA_CityLayout::InitializeSecurityLayerGridValues()
 {
     SecurityLayerGrid.Init(10, GridSize * GridSize);
+}
+
+void ACA_CityLayout::InitializeBuildingLayerGridValues()
+{
+	BuildingLayerArray.Init(0, GridSize * GridSize);
 }
 
 void ACA_CityLayout::DoBSP_Grid(int32 X, int32 Y, int32 Width, int32 Height, int32& NextID, TArray<int32>& BlockIndex, int DistrictType)
