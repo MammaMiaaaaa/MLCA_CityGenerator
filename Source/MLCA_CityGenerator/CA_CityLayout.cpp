@@ -1771,46 +1771,46 @@ void ACA_CityLayout::SetBuildingDirection()
 void ACA_CityLayout::InitializeWaterLayerGridValues()
 {
     WaterLayerGrid.Init(0, GridSize * GridSize);
-    TArray <FIntPoint> WaterSeedPosition;
-    WaterSeedPosition.Empty();
-    int32 Attempts = 0;
-    const int32 MaxAttempts = GridSize * GridSize;
+    //TArray <FIntPoint> WaterSeedPosition;
+    //WaterSeedPosition.Empty();
+    //int32 Attempts = 0;
+    //const int32 MaxAttempts = GridSize * GridSize;
 
-    while (WaterSeedPosition.Num() < WaterSeedAmount && Attempts < MaxAttempts)
-    {
-        int32 X = RNG.RandRange(0, GridSize - 1);
-        int32 Y = RNG.RandRange(0, GridSize - 1);
-        FIntPoint Pos(X, Y);
+    //while (WaterSeedPosition.Num() < WaterSeedAmount && Attempts < MaxAttempts)
+    //{
+    //    int32 X = RNG.RandRange(0, GridSize - 1);
+    //    int32 Y = RNG.RandRange(0, GridSize - 1);
+    //    FIntPoint Pos(X, Y);
 
-        bool IsValid = true;
-        for (const auto& Seed : WaterSeedPosition)
-        {
-            if (ManhattanDistance(Seed, Pos) < WaterMinSeedDistance)
-            {
-                IsValid = false;
-                break;
-            }
-        }
+    //    bool IsValid = true;
+    //    for (const auto& Seed : WaterSeedPosition)
+    //    {
+    //        if (ManhattanDistance(Seed, Pos) < WaterMinSeedDistance)
+    //        {
+    //            IsValid = false;
+    //            break;
+    //        }
+    //    }
 
-        if (IsValid)
-        {
-            WaterSeedPosition.Add(Pos);
-            WaterLayerGrid[GetIndex(X, Y)] = FMath::Clamp(WaterLayerGrid[GetIndex(X, Y)] + 50, 0, 100);
-            TArray<FIntPoint> Neighbors = GetVonNeumannNeighborsWithinRadius(X, Y, WaterSpreadDistance);
-            // for each Neighbors set the waterlayergrid to 1
-            for (const auto& N : Neighbors)
-            {
-                // Add the WaterLayerGrid on that index with 50 and Clamp the value to 100
-                WaterLayerGrid[GetIndex(N.X, N.Y)] = FMath::Clamp(WaterLayerGrid[GetIndex(N.X, N.Y)] + 50, 0, 100);
-            }
-        }
-        Attempts++;
-    }
+    //    if (IsValid)
+    //    {
+    //        WaterSeedPosition.Add(Pos);
+    //        WaterLayerGrid[GetIndex(X, Y)] = FMath::Clamp(WaterLayerGrid[GetIndex(X, Y)] + 50, 0, 100);
+    //        TArray<FIntPoint> Neighbors = GetVonNeumannNeighborsWithinRadius(X, Y, WaterSpreadDistance);
+    //        // for each Neighbors set the waterlayergrid to 1
+    //        for (const auto& N : Neighbors)
+    //        {
+    //            // Add the WaterLayerGrid on that index with 50 and Clamp the value to 100
+    //            WaterLayerGrid[GetIndex(N.X, N.Y)] = FMath::Clamp(WaterLayerGrid[GetIndex(N.X, N.Y)] + 50, 0, 100);
+    //        }
+    //    }
+    //    Attempts++;
+    //}
 
-    if (SeedPositions.Num() < NumDistricts)
-    {
-        //UE_LOG(LogTemp, Error, TEXT("Failed to place all district seeds."));
-    }
+    //if (SeedPositions.Num() < NumDistricts)
+    //{
+    //    //UE_LOG(LogTemp, Error, TEXT("Failed to place all district seeds."));
+    //}
 }
 
 void ACA_CityLayout::InitializeElectricityLayerGridValues()
