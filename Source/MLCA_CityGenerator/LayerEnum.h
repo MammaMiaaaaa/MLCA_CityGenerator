@@ -1,3 +1,4 @@
+#pragma once
 UENUM(BlueprintType)
 enum class ELayerEnum : uint8
 {

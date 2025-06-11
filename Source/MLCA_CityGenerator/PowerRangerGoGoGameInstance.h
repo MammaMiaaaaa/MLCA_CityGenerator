@@ -10,6 +10,8 @@
 /**
  * 
  */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWebSocketMessageReceived, const FString&, Message);
+
 UCLASS()
 class MLCA_CITYGENERATOR_API UPowerRangerGoGoGameInstance : public UGameInstance
 {
@@ -21,6 +23,12 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "WebSocket")
 	void SendGridMessage(const TArray<int32>& GridData);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString WebsocketResponds = "None";
+
+	UPROPERTY(BlueprintAssignable)
+	FOnWebSocketMessageReceived OnWebSocketMessageReceived;
 	
 
 	TSharedPtr<IWebSocket> WebSocket;

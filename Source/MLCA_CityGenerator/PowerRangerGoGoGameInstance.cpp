@@ -33,11 +33,14 @@ void UPowerRangerGoGoGameInstance::Init()
 			
 		});
 
-	// Add event handler for message received
-	WebSocket->OnMessage().AddLambda([](const FString& Message)
+	// Add event handler for messages received
+	WebSocket->OnMessage().AddLambda([this](const FString& Message)
 		{
 			UE_LOG(LogTemp, Log, TEXT("WebSocket message received: %s"), *Message);
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "Message received: " + Message);
+
+			WebsocketResponds = Message;
+
+			OnWebSocketMessageReceived.Broadcast(Message);
 		});
 
 	
@@ -45,7 +48,6 @@ void UPowerRangerGoGoGameInstance::Init()
 	WebSocket->OnMessageSent().AddLambda([](const FString& Message)
 		{
 			UE_LOG(LogTemp, Log, TEXT("WebSocket message sent: %s"), *Message);
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, "Message sent: " + Message);
 		});
 
 	// Connect to Websocket
