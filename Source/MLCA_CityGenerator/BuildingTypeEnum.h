@@ -1,3 +1,8 @@
+#pragma once
+
+#include "CoreMinimal.h"
+
+
 UENUM(BlueprintType)
 enum class EBuildingTypeEnum: uint8
 {

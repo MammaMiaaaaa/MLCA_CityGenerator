@@ -1,3 +1,7 @@
+#pragma once
+
+#include "CoreMinimal.h"
+
 UENUM(BlueprintType)
 enum class ELayerEnum : uint8
 {
