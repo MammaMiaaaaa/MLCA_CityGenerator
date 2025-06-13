@@ -1532,7 +1532,7 @@ void ACA_CityLayout::SetBuildingLayerGridValues()
 						//ISMTile->AddInstance(InstanceTransform, true);
                     //}
 					// Print the BlockIndex and the DistrictType
-						UE_LOG(LogTemp, Warning, TEXT("BlockIndex: %d, DistrictType: %d"), BlockIndex, District.DistrictType);
+						//UE_LOG(LogTemp, Warning, TEXT("BlockIndex: %d, DistrictType: %d"), BlockIndex, District.DistrictType);
                 }
 			}
 		}
@@ -1735,25 +1735,25 @@ void ACA_CityLayout::SetBuildingDirection()
                     // if the HighestRoadAccessibilityX is the same coloumn Bot LeftX so the direction is LEFT
                     if (HighestRoadAccessibilityX == BotLeftX + x) {
                         DistrictArray[i].BlockCellArray[j].BuildingDirection = LEFT;
-						UE_LOG(LogTemp, Warning, TEXT("BlockCell %d in District %d BuildingDirection: LEFT"), j, i);
+						//UE_LOG(LogTemp, Warning, TEXT("BlockCell %d in District %d BuildingDirection: LEFT"), j, i);
                         break;
                     }
                     // if the HighestRoadAccessibilityX is the same coloumn Top RightX so the direction is RIGHT
                     else if (HighestRoadAccessibilityX == TopRightX - x) {
                         DistrictArray[i].BlockCellArray[j].BuildingDirection = RIGHT;
-						UE_LOG(LogTemp, Warning, TEXT("BlockCell %d in District %d BuildingDirection: RIGHT"), j, i);
+						//UE_LOG(LogTemp, Warning, TEXT("BlockCell %d in District %d BuildingDirection: RIGHT"), j, i);
                         break;
                     }
                     // if the HighestRoadAccessibilityY is the same row Bot LeftY so the direction is BOTTOM
                     else if (HighestRoadAccessibilityY == BotLeftY + x) {
                         DistrictArray[i].BlockCellArray[j].BuildingDirection = BOTTOM;
-						UE_LOG(LogTemp, Warning, TEXT("BlockCell %d in District %d BuildingDirection: BOTTOM"), j, i);
+						//UE_LOG(LogTemp, Warning, TEXT("BlockCell %d in District %d BuildingDirection: BOTTOM"), j, i);
                         break;
                     }
                     // if the HighestRoadAccessibilityY is the same row Top RightY so the direction is TOP
                     else if (HighestRoadAccessibilityY == TopRightY - x) {
                         DistrictArray[i].BlockCellArray[j].BuildingDirection = TOP;
-						UE_LOG(LogTemp, Warning, TEXT("BlockCell %d in District %d BuildingDirection: TOP"), j, i);
+						//UE_LOG(LogTemp, Warning, TEXT("BlockCell %d in District %d BuildingDirection: TOP"), j, i);
                         break;
                     }
                     x++;
@@ -2426,10 +2426,10 @@ int32 ACA_CityLayout::GetRoadType(int32 RoadIndex) const
 	}
     for (int32 x = 0; x < Neighbors.Num(); x++) {
         int32 Index = GetIndex(Neighbors[x].X, Neighbors[x].Y);
-        UE_LOG(LogTemp, Warning, TEXT("Grid[%d]: %d  x:%d   y:%d"), Index, Grid[Index], Neighbors[x].X, Neighbors[x].Y);
+        //UE_LOG(LogTemp, Warning, TEXT("Grid[%d]: %d  x:%d   y:%d"), Index, Grid[Index], Neighbors[x].X, Neighbors[x].Y);
     }
-	UE_LOG(LogTemp, Warning, TEXT("RoadIndex %d:  | x:%d y:%d |"), RoadIndex, RoadIndex % GridSize, RoadIndex / GridSize);
-	UE_LOG(LogTemp, Warning, TEXT("============================="));
+	//UE_LOG(LogTemp, Warning, TEXT("RoadIndex %d:  | x:%d y:%d |"), RoadIndex, RoadIndex % GridSize, RoadIndex / GridSize);
+	//UE_LOG(LogTemp, Warning, TEXT("============================="));
  //   for (FIntPoint Neighbor : Neighbors)
  //   {
  //       int32 NeighborIndex = GetIndex(Neighbor.X, Neighbor.Y);
@@ -2494,25 +2494,25 @@ int32 ACA_CityLayout::GetRoadType(int32 RoadIndex) const
 	// Else if Contains Left Neighbor and Not Contains Top Neighbor and Not Contains Bot Neighbor
 	else if (Neighbors.Contains(FIntPoint(RoadIndex % GridSize - 1, RoadIndex / GridSize)) && !Neighbors.Contains(FIntPoint(RoadIndex % GridSize, RoadIndex / GridSize + 1)) && !Neighbors.Contains(FIntPoint(RoadIndex % GridSize, RoadIndex / GridSize - 1)))
 	{
-        UE_LOG(LogTemp, Warning, TEXT("x : %d, y : %d"), RoadIndex % GridSize - 1, RoadIndex / GridSize);
+        //UE_LOG(LogTemp, Warning, TEXT("x : %d, y : %d"), RoadIndex % GridSize - 1, RoadIndex / GridSize);
 		return 10; // Left Road
 	}
 	// Else if Contains Top Neighbor and Not Contains Left Neighbor and Not Contains Right Neighbor
 	else if (Neighbors.Contains(FIntPoint(RoadIndex % GridSize, RoadIndex / GridSize + 1)) && !Neighbors.Contains(FIntPoint(RoadIndex % GridSize - 1, RoadIndex / GridSize)) && !Neighbors.Contains(FIntPoint(RoadIndex % GridSize + 1, RoadIndex / GridSize)))
 	{
-        UE_LOG(LogTemp, Warning, TEXT("x : %d, y : %d"), RoadIndex % GridSize, RoadIndex / GridSize + 1);
+        //UE_LOG(LogTemp, Warning, TEXT("x : %d, y : %d"), RoadIndex % GridSize, RoadIndex / GridSize + 1);
 		return 11; // Top Road
 	}
 	// Else if Contains Right Neighbor and Not Contains Top Neighbor and Not Contains Bot Neighbor
 	else if (Neighbors.Contains(FIntPoint(RoadIndex % GridSize + 1, RoadIndex / GridSize)) && !Neighbors.Contains(FIntPoint(RoadIndex % GridSize, RoadIndex / GridSize + 1)) && !Neighbors.Contains(FIntPoint(RoadIndex % GridSize, RoadIndex / GridSize - 1)))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("x : %d, y : %d"), RoadIndex % GridSize + 1, RoadIndex / GridSize);
+		//UE_LOG(LogTemp, Warning, TEXT("x : %d, y : %d"), RoadIndex % GridSize + 1, RoadIndex / GridSize);
 		return 12; // Right Road
 	}
 	// Else if Contains Bot Neighbor and Not Contains Left Neighbor and Not Contains Right Neighbor
 	else if (Neighbors.Contains(FIntPoint(RoadIndex % GridSize, RoadIndex / GridSize - 1)) && !Neighbors.Contains(FIntPoint(RoadIndex % GridSize - 1, RoadIndex / GridSize)) && !Neighbors.Contains(FIntPoint(RoadIndex % GridSize + 1, RoadIndex / GridSize)))
 	{
-        UE_LOG(LogTemp, Warning, TEXT("x : %d, y : %d"), RoadIndex % GridSize , RoadIndex / GridSize - 1);
+        //UE_LOG(LogTemp, Warning, TEXT("x : %d, y : %d"), RoadIndex % GridSize , RoadIndex / GridSize - 1);
 		return 13; // Bot Road
 	}
 	// Else if Contains Left Neighbor and Contains Top Neighbor
