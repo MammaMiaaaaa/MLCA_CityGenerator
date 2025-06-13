@@ -182,16 +182,16 @@ public:
 	int32 WaterSpreadDistance = 10;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Electricity")
-	int32 ElectricitySpreadDistance = 7;
+	int32 ElectricitySpreadDistance = 15;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Satisfaction")
 	int32 SchoolSpreadDistance = 15;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Satisfaction")
-	int32 ParkSpreadDistance = 10;
+	int32 ParkSpreadDistance = 20;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Satisfaction")
-	int32 PoliceStationSpreadDistance = 15;
+	int32 PoliceStationSpreadDistance = 30;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RoadAccess")
 	int32 MinRoadAccessDistance = 3;
