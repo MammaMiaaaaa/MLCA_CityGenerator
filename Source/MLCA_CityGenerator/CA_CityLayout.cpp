@@ -1768,6 +1768,51 @@ void ACA_CityLayout::SetBuildingDirection()
     }
 }
 
+void ACA_CityLayout::CreateRandomNoiseGridWithRandomizer(float Density)
+{
+	// Initialize the RandomNoiseGrid with 0 values
+	LandscapeLayerArray.Init(0, GridSize * GridSize);
+	// Fill the RandomNoiseGrid with random values based on the Density parameter
+	for (int32 y = 0; y < GridSize; ++y)
+	{
+		for (int32 x = 0; x < GridSize; ++x)
+		{
+			int32 Index = GetIndex(x, y);
+			if (RNG.FRand() < Density)
+			{
+                LandscapeLayerArray[Index] = 1; // Set to 1 if within density
+			}
+		}
+	}
+}
+
+void ACA_CityLayout::ApplyCellularAutomataLandscapeRules(int32 NeighbourThreshold)
+{
+	// Apply rules to the LandscapeLayerArray based on the Cellular Automata rules
+	TArray<int32> NewLandscapeLayerArray = LandscapeLayerArray;
+	for (int32 y = 0; y < GridSize; ++y)
+	{
+		for (int32 x = 0; x < GridSize; ++x)
+		{
+			int32 Index = GetIndex(x, y);
+			int32 NeighborCount = 0;
+			// Count the number of neighbors that are set to 1
+			TArray<FIntPoint> Neighbors = GetMooreNeighbors(x, y);
+			for (const auto& N : Neighbors)
+			{
+				if (IsInBounds(N.X, N.Y) && LandscapeLayerArray[GetIndex(N.X, N.Y)] == 1)
+				{
+					NeighborCount++;
+				}
+			}
+			// Apply the rules based on the NeighborCount
+            
+		}
+	}
+	LandscapeLayerArray = NewLandscapeLayerArray;
+}
+
+
 void ACA_CityLayout::InitializeWaterLayerGridValues()
 {
     WaterLayerGrid.Init(0, GridSize * GridSize);
@@ -1866,6 +1911,19 @@ void ACA_CityLayout::InitializeSecurityLayerGridValues()
 void ACA_CityLayout::InitializeBuildingLayerGridValues()
 {
 	BuildingLayerArray.Init(0, GridSize * GridSize);
+
+    // for each loop DistrictArray
+    for (int32 i = 0; i < DistrictArray.Num(); ++i)
+    {
+        for (int32 j = 0; j < DistrictArray[i].BlockCellArray.Num(); ++j)
+        {
+            for (int32 k = 0; k < DistrictArray[i].BlockCellArray[j].BlockArray.Num(); ++k)
+            {
+                int32 BlockIndex = DistrictArray[i].BlockCellArray[j].BlockArray[k];
+                BuildingLayerArray[BlockIndex] = DistrictArray[i].DistrictType;
+            }
+        }
+    }
 }
 
 void ACA_CityLayout::DoBSP_Grid(int32 X, int32 Y, int32 Width, int32 Height, int32& NextID, TArray<int32>& BlockIndex, int DistrictType)

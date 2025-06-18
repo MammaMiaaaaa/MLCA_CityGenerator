@@ -341,6 +341,9 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 	TArray<FDistrictStruct> DistrictArray;
 
+	UPROPERTY(BlueprintReadWrite)
+	TArray<int32> LandscapeLayerArray;
+
     UFUNCTION(BlueprintCallable, CallInEditor)
     void Initialize();
 
@@ -428,6 +431,12 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetBuildingDirection();
 
+	UFUNCTION(BlueprintCallable)
+	void CreateRandomNoiseGridWithRandomizer(float Density);
+
+	UFUNCTION(BlueprintCallable)
+	void ApplyCellularAutomataLandscapeRules(int32 NeighbourThreshold);
+
 
 
 protected:
@@ -440,6 +449,7 @@ protected:
 	int32 CurrentDistrict = 0;
 	int32 CellCount = 0;
 
+	UFUNCTION(BlueprintCallable)
     int32 GetIndex(int32 X, int32 Y) const;
 
     bool IsInBounds(int32 X, int32 Y) const;
@@ -450,8 +460,10 @@ protected:
 
     void GrowDistricts(TArray<int32>& OutGrid);
 
+	UFUNCTION(BlueprintCallable)
 	TArray<FIntPoint> GetVonNeumannNeighborsWithinRadius(int32 StartX, int32 StartY, int32 Radius) const;
 
+	UFUNCTION(BlueprintCallable)
 	TArray<FIntPoint> GetMooreNeighborsWithinRadius(int32 StartX, int32 StartY, int32 Radius) const;
 
 	bool HasNeighboringRoad(int32 StartX, int32 StartY, int32 Radius) const;
@@ -473,7 +485,8 @@ protected:
 	void InitializeRoadAccessibilityLayerGridValues();
 
 	void InitializeSecurityLayerGridValues();
-		
+	
+	UFUNCTION(BlueprintCallable)
 	void InitializeBuildingLayerGridValues();
 
 	void DoBSP_Grid(int32 X, int32 Y, int32 Width, int32 Height, int32& NextID, TArray<int32>& BlockIndex, int DistrictType);
