@@ -67,6 +67,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
 	bool bUseMooreNeighborhood = true;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parameter")
+	float ZHeightMultiplier = 600.0f;
+
 	//District Weights
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DistrictWeight")
 	int32 ResidentialDistrictWeight = 1;

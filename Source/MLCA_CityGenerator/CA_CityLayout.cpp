@@ -1577,9 +1577,11 @@ void ACA_CityLayout::SetTreeLayerGridValues()
         
         // Add Random Vector to InstanceTransform Location
 		float OffsetAmount = static_cast<float>(GridSize) / 2.0f;
-        FVector RandomOffset = FVector(FMath::RandRange(-OffsetAmount, OffsetAmount), FMath::RandRange(-OffsetAmount, OffsetAmount), 0.0f);
+		float Height = LandscapeLayerArray[TreeIndex] * ZHeightMultiplier; // Scale height based on landscape layer value ZMultiplier
+        FVector RandomOffset = FVector(FMath::RandRange(-OffsetAmount, OffsetAmount), FMath::RandRange(-OffsetAmount, OffsetAmount), Height);
 		InstanceTransform.AddToTranslation(RandomOffset);
 		InstanceTransform.SetRotation(FQuat::MakeFromEuler(FVector(0, 0, FMath::RandRange(0, 360)))); // Random rotation around Z-axis
+
 
         if (Grid[TreeIndex] < 0)
 			TreeLayerArray[TreeIndex] = -1; // Skip if not valid for tree placement
