@@ -283,8 +283,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UrbanForestThreshold")
 	int32 UrbanForestSecurityThreshold = 0;
-
-
 	
 	// Utility
 	UPROPERTY(BlueprintReadOnly)
@@ -342,7 +340,7 @@ public:
 	TArray<FDistrictStruct> DistrictArray;
 
 	UPROPERTY(BlueprintReadWrite)
-	TArray<int32> LandscapeLayerArray;
+	TArray<float> LandscapeLayerArray;
 
     UFUNCTION(BlueprintCallable, CallInEditor)
     void Initialize();
@@ -489,6 +487,8 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void InitializeBuildingLayerGridValues();
 
+	void InitializeLandscapeLayerGridValues();
+
 	void DoBSP_Grid(int32 X, int32 Y, int32 Width, int32 Height, int32& NextID, TArray<int32>& BlockIndex, int DistrictType);
 
 	int32 GetMaxHeight(TArray<int32>& GridArray, int32 Y);
@@ -504,6 +504,9 @@ protected:
 	int32 GetRoadType(int32 RoadIndex) const;
 
 	int32 GetMinDistanceToRoad(int32 X, int32 Y) const;
+
+	UFUNCTION(BlueprintCallable)
+	bool CheckHasIndustrialBuilding(int32 X, int32 Y, int32 Radius) const;
 
 
 public:	

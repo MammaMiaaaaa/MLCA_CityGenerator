@@ -416,6 +416,7 @@ void ACA_CityLayout::InitializeLayerValues()
     InitializeRoadAccessibilityLayerGridValues();
     InitializeSecurityLayerGridValues();
 	InitializeBuildingLayerGridValues();
+	InitializeLandscapeLayerGridValues();
 }
 
 void ACA_CityLayout::UpdateISMToSpecificLayer(ELayerEnum LayerEnum)
@@ -1556,7 +1557,7 @@ void ACA_CityLayout::SetTreeLayerGridValues()
 		
     }*/
 	// for each loop DistrictArray
-	for (FDistrictStruct& District : DistrictArray)
+	/*for (FDistrictStruct& District : DistrictArray)
 	{
 		for (FBlockCellStruct BlockCell: District.BlockCellArray)
 		{
@@ -1565,7 +1566,7 @@ void ACA_CityLayout::SetTreeLayerGridValues()
                 TreeLayerArray[BlockIndex] = -1;
 			}
 		}
-	}
+	}*/
 	// Get transform from InstancedGridMesh
 
 	for (int32 TreeIndex = 0; TreeIndex < GridSize * GridSize; ++TreeIndex)
@@ -1588,6 +1589,16 @@ void ACA_CityLayout::SetTreeLayerGridValues()
 
 		if (DistrictLayerGrid[TreeIndex] == INDUSTRIAL && !HasNeighboringRoad(TreeIndex % GridSize, TreeIndex / GridSize, 1))
 			TreeLayerArray[TreeIndex] = -1; // Skip if not valid for tree placement
+        
+        if (BuildingLayerArray[TreeIndex] == 1 ) {
+			TreeLayerArray[TreeIndex] = -1; // Skip if there is a building on the cell
+        }
+		if (BuildingLayerArray[TreeIndex] == 2) {
+			TreeLayerArray[TreeIndex] = -1; // Skip if there is a building on the cell
+		}
+		if (BuildingLayerArray[TreeIndex] == 3) {
+			TreeLayerArray[TreeIndex] = -1; // Skip if there is a building on the cell
+		}
 
 		if (TreeLayerArray[TreeIndex] == -1) continue; // Skip if not valid for tree placement
         // Randomize the InstanceStaticMesh Variant
@@ -1789,7 +1800,7 @@ void ACA_CityLayout::CreateRandomNoiseGridWithRandomizer(float Density)
 void ACA_CityLayout::ApplyCellularAutomataLandscapeRules(int32 NeighbourThreshold)
 {
 	// Apply rules to the LandscapeLayerArray based on the Cellular Automata rules
-	TArray<int32> NewLandscapeLayerArray = LandscapeLayerArray;
+	TArray<float> NewLandscapeLayerArray = LandscapeLayerArray;
 	for (int32 y = 0; y < GridSize; ++y)
 	{
 		for (int32 x = 0; x < GridSize; ++x)
@@ -1924,6 +1935,11 @@ void ACA_CityLayout::InitializeBuildingLayerGridValues()
             }
         }
     }
+}
+
+void ACA_CityLayout::InitializeLandscapeLayerGridValues()
+{
+	LandscapeLayerArray.Init(0, GridSize * GridSize);
 }
 
 void ACA_CityLayout::DoBSP_Grid(int32 X, int32 Y, int32 Width, int32 Height, int32& NextID, TArray<int32>& BlockIndex, int DistrictType)
@@ -2375,10 +2391,10 @@ void ACA_CityLayout::GetRoadJunctions()
 
 void ACA_CityLayout::FindLargestRectangle(TArray<int32>& ComponentIndices,int32& OutSizeX, int32& OutSizeY, int DistrictType)
 {
-    int32 minXSize;
-    int32 minYSize;
-    int32 maxXSize;
-    int32 maxYSize;
+    int32 minXSize = 0;
+    int32 minYSize = 0;
+    int32 maxXSize = 0;
+    int32 maxYSize = 0;
     switch (DistrictType)
     {
     case 0:
@@ -2417,7 +2433,7 @@ void ACA_CityLayout::FindLargestRectangle(TArray<int32>& ComponentIndices,int32&
     }
 
     int32 MaxArea = 0;
-    FIntPoint BestTopLeft;
+	FIntPoint BestTopLeft = FIntPoint(0, 0);
     int32 BestWidth = 0;
     int32 BestHeight = 0;
 
@@ -2650,6 +2666,21 @@ int32 ACA_CityLayout::GetMinDistanceToRoad(int32 X, int32 Y) const
         }
     }
     return -1;
+}
+
+bool ACA_CityLayout::CheckHasIndustrialBuilding(int32 X, int32 Y, int32 Radius) const
+{
+	TArray<FIntPoint> Neighbors = GetMooreNeighborsWithinRadius(X, Y, Radius);
+
+    for (const auto& Neighbor : Neighbors) {
+		int32 NeighborIndex = GetIndex(Neighbor.X, Neighbor.Y);
+		// Check if the neighbor is an industrial building
+		if (BuildingLayerArray[NeighborIndex] == INDUSTRIAL) {
+			return true;
+		}
+    }
+
+    return false;
 }
 
 
